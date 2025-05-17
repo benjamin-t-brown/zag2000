@@ -57,13 +57,29 @@ int getPlayerAreaIndFromPos(State& state, int x, int y) {
   return xTile + yTile * state.playAreaWidthTiles;
 }
 
-int getTrainInd(State& state, Train& head) {
+int getTrainLookAheadInd(State& state, Train& head) {
   int headOffset = head.hDirection == TRAIN_RIGHT ? head.w / 2 : -head.w / 2;
   return getPlayerAreaIndFromPos(state, head.x + headOffset, head.y);
 }
 
+int getTrainInd(State& state, Train& head) {
+  return getPlayerAreaIndFromPos(state, head.x, head.y);
+}
+
 bool isBushAtInd(State& state, int ind) {
   return state.bushes.find(ind) != state.bushes.end();
+}
+
+bool isAnotherTrainAtInd(State& state, Train& myTrain, int ind) {
+  for (const auto& train : state.trainHeads) {
+    if (train.get() == &myTrain) {
+      continue;
+    }
+    if (getTrainInd(state, *train) == ind) {
+      return true;
+    }
+  }
+  return false;
 }
 
 void trainSwapHDirection(Train& train) {
@@ -111,9 +127,17 @@ void trainCheckSetHeadRotationOrNext(Train& head, State& state, double nextX) {
     double prevX = head.x;
     head.x = nextX;
 
-    int trainInd = getTrainInd(state, head);
-    if (isBushAtInd(state, trainInd)) {
+    int trainAheadInd = getTrainLookAheadInd(state, head);
+    // int trainInd = getTrainInd(state, head);
+    if (isBushAtInd(state, trainAheadInd)) {
       LOG(INFO) << "START HEAD ROTATION" << LOG_ENDL;
+      head.isRotating = true;
+      head.x = prevX;
+      timer::start(head.rotationTimer);
+      trainSwapHDirection(head);
+      head.prevX = prevX;
+    } else if (isAnotherTrainAtInd(state, head, trainAheadInd)) {
+      LOG(INFO) << "START HEAD ROTATION BONK" << LOG_ENDL;
       head.isRotating = true;
       head.x = prevX;
       timer::start(head.rotationTimer);
@@ -287,12 +311,12 @@ void updateTrain(Train& head, State& state, int dt) {
         // LOG(INFO) << "Determine from prev dist: " << prevDiffFromWall << " "
         // << cart->rotationTimer.duration << LOG_ENDL;
         // if (cart->rotationTimer.t
-        if (prevDiffFromWall > cart->rotationTimer.t) {
-          cart->rotationTimer.t = prevDiffFromWall;
-        } else {
-          // rough approx
-          cart->rotationTimer.t += dt * cart->speed;
-        }
+        // if (prevDiffFromWall > cart->rotationTimer.t) {
+        //   cart->rotationTimer.t = prevDiffFromWall;
+        // } else {
+        //   // rough approx
+        // }
+        cart->rotationTimer.t += dt * cart->speed;
       }
 
       double distOverage = cart->rotationTimer.t - cart->rotationTimer.duration;
@@ -383,15 +407,17 @@ int main(int argc, char** argv) {
   gameRenderer.setup();
 
   auto head1 = createTrain(state, 3, 0);
+  auto head2 = createTrain(state, 6, 0);
+  head2->hDirection = TRAIN_LEFT;
   // createCart(head1);
   // createCart(head1);
   // createCart(head1);
   // createCart(head1);
   // createCart(head1);
 
-  createBush(state, 5, 0);
-  createBush(state, 4, 1);
-  createBush(state, 3, 1);
+  // createBush(state, 5, 0);
+  // createBush(state, 4, 1);
+  // createBush(state, 3, 1);
 
   // createBush(state, 5, 0);
   // createBush(state, 3, 1);
