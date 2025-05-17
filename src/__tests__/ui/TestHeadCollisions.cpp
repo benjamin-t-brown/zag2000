@@ -78,6 +78,13 @@ bool isAnotherTrainAtInd(State& state, Train& myTrain, int ind) {
     if (getTrainInd(state, *train) == ind) {
       return true;
     }
+    Train* cart = train->next.get();
+    while (cart) {
+      if (getTrainInd(state, *cart) == ind) {
+        return true;
+      }
+      cart = cart->next.get();
+    }
   }
   return false;
 }
@@ -91,6 +98,9 @@ void trainCheckSetHeadRotationOrNext(Train& head, State& state, double nextX) {
   const double leftBound = state.playAreaXOffset + halfWidth;
   const double rightBound =
       state.playAreaXOffset + state.playAreaWidthTiles * TILE_WIDTH - halfWidth;
+  const double lowerBound =
+      state.playAreaYOffset + state.playAreaHeightTiles * TILE_HEIGHT;
+  const double upperBound = state.playAreaYOffset;
 
   if (nextX > rightBound && head.hDirection == TRAIN_RIGHT) {
     LOG(INFO) << "START HEAD ROTATION" << LOG_ENDL;
@@ -145,11 +155,23 @@ void trainCheckSetHeadRotationOrNext(Train& head, State& state, double nextX) {
       head.prevX = prevX;
     }
   }
+
+  // rotating set this tick
+  if (head.isRotating) {
+    if (head.y + head.h > lowerBound) {
+      head.vDirection = TRAIN_UP;
+    } else if (head.y - head.h < upperBound) {
+      head.vDirection = TRAIN_DOWN;
+    }
+  }
 }
 
 void updateTrain(Train& head, State& state, int dt) {
   double dx = head.hDirection == TRAIN_RIGHT ? head.speed : -head.speed;
   double nextX = head.x + dx * dt;
+  const double lowerBound =
+      state.playAreaYOffset + state.playAreaHeightTiles * TILE_HEIGHT;
+  const double upperBound = state.playAreaYOffset;
   // const double halfWidth = head.w / 2.;
   // const double leftBound = state.playAreaXOffset + halfWidth;
   // const double rightBound =
@@ -219,14 +241,22 @@ void updateTrain(Train& head, State& state, int dt) {
         head.isRotating = false;
         timer::start(head.rotationTimer);
         head.x = head.prevX - distOverage;
-        head.y = head.prevY + head.h;
+        // if (head.vDirection
+        head.y = head.vDirection == TRAIN_DOWN ? head.prevY + head.h
+                                               : head.prevY - head.h;
         head.prevY = head.y;
+        // if (head.y + head.h
         // trainCheckSetHeadRotationOrNext(head, state, head.x);
       } else {
         head.isRotating = true;
         head.x = head.prevX;
-        head.y = head.prevY + static_cast<double>(head.h) *
-                                  timer::getPct(head.rotationTimer);
+        // head.y = head.prevY + static_cast<double>(head.h) *
+        //                           timer::getPct(head.rotationTimer);
+        head.y = head.prevY + (head.vDirection == TRAIN_DOWN
+                                   ? static_cast<double>(head.h) *
+                                         timer::getPct(head.rotationTimer)
+                                   : -static_cast<double>(head.h) *
+                                         timer::getPct(head.rotationTimer));
       }
     } else {
       double diffDist = head.x - nextX;
@@ -238,14 +268,18 @@ void updateTrain(Train& head, State& state, int dt) {
         head.isRotating = false;
         timer::start(head.rotationTimer);
         head.x = head.prevX + diffDist + distOverage;
-        head.y = head.prevY + head.h;
+        head.y =
+            head.prevY + (head.vDirection == TRAIN_DOWN ? head.h : -head.h);
         head.prevY = head.y;
         // trainCheckSetHeadRotationOrNext(head, state, head.x);
       } else {
         head.isRotating = true;
         head.x = head.prevX;
-        head.y = head.prevY + static_cast<double>(head.h) *
-                                  timer::getPct(head.rotationTimer);
+        head.y = head.prevY + (head.vDirection == TRAIN_DOWN
+                                   ? static_cast<double>(head.h) *
+                                         timer::getPct(head.rotationTimer)
+                                   : -static_cast<double>(head.h) *
+                                         timer::getPct(head.rotationTimer));
       }
     }
   }
@@ -272,6 +306,7 @@ void updateTrain(Train& head, State& state, int dt) {
         cart->isRotating = true;
         timer::start(cart->rotationTimer);
         trainSwapHDirection(*cart);
+        cart->vDirection = prev->vDirection;
         cart->prevX = cart->x;
         // cart->prevY = cart->y;
         LOG(INFO) << "  Start cart rotation" << LOG_ENDL;
@@ -325,13 +360,20 @@ void updateTrain(Train& head, State& state, int dt) {
         timer::start(prev->rotationTimer);
         nextX = (prev->hDirection == TRAIN_LEFT ? prev->prevX - distOverage
                                                 : prev->prevX + distOverage);
-        cart->y = cart->prevY + cart->h;
+        // cart->y = cart->prevY + cart->h;
+        cart->y = (cart->vDirection == TRAIN_DOWN ? cart->prevY + cart->h
+                                                  : cart->prevY - cart->h);
         cart->prevY = cart->y;
         LOG(INFO) << "  Cart done rotating" << LOG_ENDL;
       } else {
         nextX = prev->hDirection == TRAIN_LEFT ? prev->prevX : prev->prevX;
-        cart->y = cart->prevY + static_cast<double>(cart->h) *
-                                    timer::getPct(cart->rotationTimer);
+        // cart->y = cart->prevY + static_cast<double>(cart->h) *
+        //                             timer::getPct(cart->rotationTimer);
+        cart->y = cart->prevY + (cart->vDirection == TRAIN_DOWN
+                                     ? static_cast<double>(cart->h) *
+                                           timer::getPct(cart->rotationTimer)
+                                     : -static_cast<double>(cart->h) *
+                                           timer::getPct(cart->rotationTimer));
       }
       // if (remainingDist > 0) {
       //   nextX = prev->hDirection == TRAIN_LEFT ? w - halfWidth -
@@ -406,18 +448,29 @@ int main(int argc, char** argv) {
   Render gameRenderer(window);
   gameRenderer.setup();
 
-  auto head1 = createTrain(state, 3, 0);
-  auto head2 = createTrain(state, 6, 0);
-  head2->hDirection = TRAIN_LEFT;
-  // createCart(head1);
+  // auto head1 = createTrain(state, 3, 0);
+  // for (int i = 0; i < 5; i++) {
+  //   createCart(head1);
+  // }
   // createCart(head1);
   // createCart(head1);
   // createCart(head1);
   // createCart(head1);
 
-  // createBush(state, 5, 0);
-  // createBush(state, 4, 1);
-  // createBush(state, 3, 1);
+  // auto head2 = createTrain(state, 8, 1);
+  // head2->hDirection = TRAIN_LEFT;
+  // for (int i = 0; i < 5; i++) {
+  //   createCart(head2);
+  // }
+
+  auto head3 = createTrain(state, 5, 9);
+  for (int i = 0; i < 5; i++) {
+    createCart(head3);
+  }
+
+  createBush(state, 5, 0);
+  createBush(state, 6, 2);
+  createBush(state, 3, 1);
 
   // createBush(state, 5, 0);
   // createBush(state, 3, 1);
