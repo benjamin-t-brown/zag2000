@@ -1,0 +1,137 @@
+# sdl2w asset file
+
+Sound,airplane,assets/snd/airplane.wav
+Sound,bomb_expl,assets/snd/bomb_expl.wav
+Sound,extra_life,assets/snd/extra_life.wav
+Sound,game_over,assets/snd/game_over.wav
+Sound,hit,assets/snd/hit.wav
+Sound,missile_spawn,assets/snd/missile_spawn.wav
+Sound,missile_speed,assets/snd/missile_speed.wav
+Sound,player_hit,assets/snd/player_hit.wav
+Sound,player_missile,assets/snd/player_missile.wav
+Sound,shoot_bomb,assets/snd/shoot_bomb.wav
+Sound,start_game,assets/snd/start_game.wav
+Music,zag,assets/snd/zag.wav
+
+Pic,train0,assets/img/train0.png
+Sprites,train0,16,40,33
+Anim,train0_left,loop
+train0_0 100
+train0_1 100
+train0_2 100
+train0_1 100
+EndAnim
+Anim,train0_down,loop
+train0_3 100
+train0_4 100
+train0_5 100
+train0_4 100
+EndAnim
+Anim,train0_up,loop
+train0_6 100
+train0_7 100
+train0_8 100
+train0_7 100
+EndAnim
+Anim,train0_leftdown,loop
+train0_9 100
+train0_10 100
+train0_11 100
+train0_10 100
+EndAnim
+Anim,train0_leftup,loop
+train0_12 100
+train0_13 100
+train0_14 100
+train0_13 100
+EndAnim
+
+Pic,cart0,assets/img/cart0.png
+Sprites,cart0,12,40,33
+Anim,cart0_left,loop
+cart0_0 100
+cart0_1 100
+cart0_2 100
+cart0_1 100
+EndAnim
+Anim,cart0_down,loop
+cart0_3 100
+cart0_4 100
+cart0_5 100
+cart0_4 100
+EndAnim
+Anim,cart0_up,loop
+cart0_3 100
+cart0_4 100
+cart0_5 100
+cart0_4 100
+EndAnim
+Anim,cart0_leftdown,loop
+cart0_6 100
+cart0_7 100
+cart0_8 100
+cart0_7 100
+EndAnim
+Anim,cart0_leftup,loop
+cart0_9 100
+cart0_10 100
+cart0_11 100
+cart0_10 100
+EndAnim
+
+Pic,player,assets/img/player.png
+Sprites,player,2,40,33
+
+Pic,duo_missile,assets/img/duo_missile.png
+Sprites,duo_missile,4,40,33
+
+Pic,bush0,assets/img/bush0.png
+Sprites,bush0,4,40,33
+
+Pic,bomb,assets/img/bomb.png
+Sprites,bomb,1,8,8
+Anim,bomb_anim,loop
+bomb_0 100
+bomb_0_f 100
+EndAnim
+
+Pic,bomb_target,assets/img/bomb_target.png
+Sprites,bomb_target,1,8,8
+
+Pic,bomb_expl,assets/img/bomb_expl.png
+Sprites,bomb_expl,8,64,64
+Anim,bomb_expl_anim,noloop
+bomb_expl_0 50
+bomb_expl_1 50
+bomb_expl_2 50
+bomb_expl_3 50
+bomb_expl_4 50
+bomb_expl_5 50
+bomb_expl_6 50
+bomb_expl_7 50
+EndAnim
+
+Pic,bomber,assets/img/bomber.png
+Sprites,bomber,4,40,33
+Anim,bomber_anim,noloop
+bomber_0 100
+bomber_2 100
+bomber_1 100
+bomber_2 100
+EndAnim
+
+Pic,plane,assets/img/plane.png
+Sprites,plane,2,40,33
+Anim,plane_left,loop
+plane_0 200
+plane_1 200
+EndAnim
+
+Pic,expl_entity,assets/img/expl_entity.png
+Sprites,expl_entity,16,22,16
+Anim,expl_entity0,loop
+expl_entity_0 50
+expl_entity_1 50
+expl_entity_2 50
+expl_entity_3 50
+EndAnim
