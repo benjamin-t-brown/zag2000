@@ -21,7 +21,7 @@ sdl2w::Animation& Render::getAnim(const std::string& name) {
   if (animations.find(name) == animations.end()) {
     sdl2w::AnimationDefinition def =
         window.getStore().getAnimationDefinition(name);
-    LOG(INFO) << "Creating animation: " << name << LOG_ENDL;
+    // LOG(INFO) << "Creating animation: " << name << LOG_ENDL;
     animations[name] =
         std::unique_ptr<Animation>(new Animation(def, window.getStore()));
   }
@@ -40,12 +40,12 @@ void Render::renderBush(const Bush& bush) {
   }
 
   std::stringstream ss;
-  ss << "bush0" << 4 - bush.hp;
+  ss << "bush0_" << 4 - bush.hp;
   window.getDraw().drawSprite(
       //
       window.getStore().getSprite(ss.str()),
       RenderableParams{//
-                       .scale = {1., 1.},
+                       .scale = {TILE_SCALE, TILE_SCALE},
                        .x = bush.x,
                        .y = bush.y});
 }
@@ -60,7 +60,7 @@ void Render::renderPlayer(const Player& player) {
       //
       window.getStore().getSprite(ss.str()),
       RenderableParams{//
-                       .scale = {1., 1.},
+                       .scale = {TILE_SCALE, TILE_SCALE},
                        .x = static_cast<int>(player.physics.x),
                        .y = static_cast<int>(player.physics.y)});
 }
@@ -72,7 +72,7 @@ void Render::renderTrain(const Train& train) {
 
   if (train.isRotating) {
     double pct = timer::getPct(train.rotationTimer);
-    if (pct < 0.33) {
+    if (pct < 0.25) {
       // leftdown/rightdown OR leftup/rightup
       if (train.vDirection == TRAIN_UP) {
         if (train.hDirection == TRAIN_LEFT) {
@@ -89,7 +89,7 @@ void Render::renderTrain(const Train& train) {
           ss << "_leftdown";
         }
       }
-    } else if (pct < 0.66) {
+    } else if (pct < 0.50) {
       // down/up
       if (train.vDirection == TRAIN_UP) {
         ss << "_up";
@@ -97,7 +97,7 @@ void Render::renderTrain(const Train& train) {
         ss << "_down";
       }
 
-    } else {
+    } else if (pct < 0.75) {
       // rightdown/leftdown or rightup/leftup
       if (train.vDirection == TRAIN_UP) {
         if (train.hDirection == TRAIN_LEFT) {
@@ -113,6 +113,11 @@ void Render::renderTrain(const Train& train) {
           ss << "_leftdown";
           flip = true;
         }
+      }
+    } else {
+      ss << "_left";
+      if (train.hDirection == TRAIN_RIGHT) {
+        flip = true;
       }
     }
   } else {

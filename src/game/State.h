@@ -39,10 +39,11 @@ enum TrainDirectionH {
 struct Train {
   std::unique_ptr<Train> next;
   Timer rotationTimer = Timer{TILE_WIDTH};
-  double x = 0;
-  double y = 0;
-  double prevY = 0;
-  double speed = .05;
+  double x = 0.;
+  double y = 0.;
+  double prevX = 0.;
+  double prevY = 0.;
+  double speed = .1;
   TrainDirectionH hDirection = TRAIN_RIGHT;
   TrainDirectionV vDirection = TRAIN_DOWN;
   int w = TILE_WIDTH;
@@ -103,7 +104,7 @@ struct Player {
 };
 
 struct State {
-  std::vector<std::unique_ptr<Bush>> bushes;
+  std::unordered_map<int, std::unique_ptr<Bush>> bushes;
   std::vector<std::unique_ptr<Train>> trainHeads;
   std::vector<std::unique_ptr<Bullet>> bullets;
   std::vector<std::unique_ptr<Bomber>> bombers;
@@ -117,14 +118,17 @@ struct State {
   std::vector<std::string> soundsToPlay;
   Player player;
 
-  int playAreaWidth = 0;
-  int playAreaHeight = 0;
+  int playAreaWidthTiles = 0;
+  int playAreaHeightTiles = 0;
+  int playAreaXOffset = 0;
+  int playAreaYOffset = 0;
 };
 
 inline void enqueueAction(State& state,
                           std::unique_ptr<actions::AbstractAction> action,
                           int ms) {
-  auto actionPtr = new actions::AsyncAction{std::move(action), Timer{static_cast<double>(ms), 0}};
+  auto actionPtr = new actions::AsyncAction{std::move(action),
+                                            Timer{static_cast<double>(ms), 0}};
   state.sequentialActionsNext.push_back(
       std::unique_ptr<actions::AsyncAction>(actionPtr));
 }
@@ -132,8 +136,9 @@ inline void enqueueAction(State& state,
 inline void addParallelAction(State& state,
                               std::unique_ptr<actions::AbstractAction> action,
                               int ms) {
-  state.parallelActions.push_back(std::unique_ptr<actions::AsyncAction>(
-      new actions::AsyncAction{std::move(action), Timer{static_cast<double>(ms), 0}}));
+  state.parallelActions.push_back(
+      std::unique_ptr<actions::AsyncAction>(new actions::AsyncAction{
+          std::move(action), Timer{static_cast<double>(ms), 0}}));
 }
 
 inline void moveSequentialActions(State& state) {

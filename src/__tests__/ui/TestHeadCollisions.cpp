@@ -10,11 +10,12 @@
 
 using namespace program;
 
-Train* createTrain(int x, int y) {
+Train* createTrain(State& state, int xTile, int yTile) {
   Train* train = new Train();
-  train->x = x;
-  train->y = y;
-  train->prevY = y;
+  train->x = xTile * TILE_WIDTH + state.playAreaXOffset + TILE_WIDTH / 2.;
+  train->y = yTile * TILE_HEIGHT + state.playAreaYOffset + TILE_HEIGHT / 2.;
+  train->prevY = train->y;
+  state.trainHeads.push_back(std::unique_ptr<Train>(train));
   return train;
 }
 
@@ -32,32 +33,67 @@ Train* createCart(Train* head) {
   return cart;
 }
 
-void updateTrain(Train& head, int dt) {
-  double dx = head.hDirection == TRAIN_RIGHT ? head.speed : -head.speed;
-  double nextX = head.x + dx * dt;
+Bush* createBush(State& state, int xTile, int yTile) {
+  int bushInd = xTile + yTile * state.playAreaWidthTiles;
+  // if bush already exists, skip
+  if (state.bushes.find(bushInd) != state.bushes.end()) {
+    return nullptr;
+  }
+
+  Bush* bush = new Bush();
+  bush->x = xTile * TILE_WIDTH + state.playAreaXOffset + TILE_WIDTH / 2.;
+  bush->y = yTile * TILE_HEIGHT + state.playAreaYOffset + TILE_HEIGHT / 2.;
+  state.bushes[bushInd] = std::unique_ptr<Bush>(bush);
+  return bush;
+}
+
+int getPlayerAreaIndFromPos(State& state, int x, int y) {
+  int xTile = (x - state.playAreaXOffset) / TILE_WIDTH;
+  int yTile = (y - state.playAreaYOffset) / TILE_HEIGHT;
+  if (xTile < 0 || xTile >= state.playAreaWidthTiles || yTile < 0 ||
+      yTile >= state.playAreaHeightTiles) {
+    return -1;
+  }
+  return xTile + yTile * state.playAreaWidthTiles;
+}
+
+int getTrainInd(State& state, Train& head) {
+  int headOffset = head.hDirection == TRAIN_RIGHT ? head.w / 2 : -head.w / 2;
+  return getPlayerAreaIndFromPos(state, head.x + headOffset, head.y);
+}
+
+bool isBushAtInd(State& state, int ind) {
+  return state.bushes.find(ind) != state.bushes.end();
+}
+
+void trainSwapHDirection(Train& train) {
+  train.hDirection = train.hDirection == TRAIN_RIGHT ? TRAIN_LEFT : TRAIN_RIGHT;
+}
+
+void trainCheckSetHeadRotationOrNext(Train& head, State& state, double nextX) {
   const double halfWidth = head.w / 2.;
+  const double leftBound = state.playAreaXOffset + halfWidth;
+  const double rightBound =
+      state.playAreaXOffset + state.playAreaWidthTiles * TILE_WIDTH - halfWidth;
 
-
-  const double leftBound = halfWidth;
-  const double rightBound = 100. - halfWidth;
-  const double w = 100.;
-
-  if (nextX > w - halfWidth && head.hDirection == TRAIN_RIGHT &&
-      !head.isRotating) {
+  if (nextX > rightBound && head.hDirection == TRAIN_RIGHT) {
+    LOG(INFO) << "START HEAD ROTATION" << LOG_ENDL;
     head.isRotating = true;
     timer::start(head.rotationTimer);
-    head.hDirection = head.hDirection == TRAIN_RIGHT ? TRAIN_LEFT : TRAIN_RIGHT;
+    trainSwapHDirection(head);
+    head.prevX = rightBound;
 
     // LOG(INFO) << "x: " << head.x << " diff" << diffDist << " "
     //           << timer::getPct(head.rotationTimer) << LOG_ENDL;
-  } else if (nextX < 0 + halfWidth && head.hDirection == TRAIN_LEFT &&
-             !head.isRotating) {
+  } else if (nextX < leftBound && head.hDirection == TRAIN_LEFT) {
+    LOG(INFO) << "START HEAD ROTATION" << LOG_ENDL;
     // head.hDirection = head.hDirection == TRAIN_RIGHT ? TRAIN_LEFT :
     // TRAIN_RIGHT;
 
     head.isRotating = true;
     timer::start(head.rotationTimer);
-    head.hDirection = head.hDirection == TRAIN_RIGHT ? TRAIN_LEFT : TRAIN_RIGHT;
+    trainSwapHDirection(head);
+    head.prevX = leftBound;
 
     // timer::update(head.rotationTimer, diffDist);
     // if (timer::isComplete(head.rotationTimer)) {
@@ -71,10 +107,78 @@ void updateTrain(Train& head, int dt) {
     // head.x = w - halfWidth - diffDist;
 
     // LOG(INFO) << "x: " << head.x << " diff" << diffDist << LOG_ENDL;
-  } else if (!head.isRotating) {
+  } else {
+    double prevX = head.x;
     head.x = nextX;
-  }
 
+    int trainInd = getTrainInd(state, head);
+    if (isBushAtInd(state, trainInd)) {
+      LOG(INFO) << "START HEAD ROTATION" << LOG_ENDL;
+      head.isRotating = true;
+      head.x = prevX;
+      timer::start(head.rotationTimer);
+      trainSwapHDirection(head);
+      head.prevX = prevX;
+    }
+  }
+}
+
+void updateTrain(Train& head, State& state, int dt) {
+  double dx = head.hDirection == TRAIN_RIGHT ? head.speed : -head.speed;
+  double nextX = head.x + dx * dt;
+  // const double halfWidth = head.w / 2.;
+  // const double leftBound = state.playAreaXOffset + halfWidth;
+  // const double rightBound =
+  //     state.playAreaXOffset + state.playAreaWidthTiles * TILE_WIDTH -
+  //     halfWidth;
+  // const double w = 100.;
+
+  if (!head.isRotating) {
+    trainCheckSetHeadRotationOrNext(head, state, nextX);
+    // if (nextX > rightBound && head.hDirection == TRAIN_RIGHT) {
+    //   head.isRotating = true;
+    //   timer::start(head.rotationTimer);
+    //   trainSwapHDirection(head);
+    //   head.prevX = rightBound;
+
+    //   // LOG(INFO) << "x: " << head.x << " diff" << diffDist << " "
+    //   //           << timer::getPct(head.rotationTimer) << LOG_ENDL;
+    // } else if (nextX < leftBound && head.hDirection == TRAIN_LEFT) {
+    //   // head.hDirection = head.hDirection == TRAIN_RIGHT ? TRAIN_LEFT :
+    //   // TRAIN_RIGHT;
+
+    //   head.isRotating = true;
+    //   timer::start(head.rotationTimer);
+    //   trainSwapHDirection(head);
+    //   head.prevX = leftBound;
+
+    //   // timer::update(head.rotationTimer, diffDist);
+    //   // if (timer::isComplete(head.rotationTimer)) {
+    //   //   head.isRotating = false;
+    //   //   timer::start(head.rotationTimer, 0);
+    //   //   head.x = 0 + halfWidth + diffDist;
+    //   // } else {
+    //   //   head.isRotating = true;
+    //   //   head.x = halfWidth;
+    //   // }
+    //   // head.x = w - halfWidth - diffDist;
+
+    //   // LOG(INFO) << "x: " << head.x << " diff" << diffDist << LOG_ENDL;
+    // } else {
+    //   double prevX = head.x;
+    //   head.x = nextX;
+
+    //   int trainInd = getTrainInd(state, head);
+    //   if (isBushAtInd(state, trainInd)) {
+    //     head.isRotating = true;
+    //     head.x = prevX;
+    //     timer::start(head.rotationTimer);
+    //     trainSwapHDirection(head);
+    //     head.prevX = prevX;
+    //   }
+    // }
+  }
+  // dont else this
   if (head.isRotating) {
     // weird swap
     double dx = head.hDirection == TRAIN_LEFT ? head.speed : -head.speed;
@@ -87,15 +191,16 @@ void updateTrain(Train& head, int dt) {
           head.rotationTimer.t + diffDist - head.rotationTimer.duration;
       timer::update(head.rotationTimer, diffDist);
       if (timer::isComplete(head.rotationTimer)) {
-        LOG(INFO) << "FLIP" << LOG_ENDL;
+        LOG(INFO) << "Head done rotating" << LOG_ENDL;
         head.isRotating = false;
         timer::start(head.rotationTimer);
-        head.x = w - halfWidth - distOverage;
+        head.x = head.prevX - distOverage;
         head.y = head.prevY + head.h;
         head.prevY = head.y;
+        // trainCheckSetHeadRotationOrNext(head, state, head.x);
       } else {
         head.isRotating = true;
-        head.x = w - halfWidth;
+        head.x = head.prevX;
         head.y = head.prevY + static_cast<double>(head.h) *
                                   timer::getPct(head.rotationTimer);
       }
@@ -105,15 +210,16 @@ void updateTrain(Train& head, int dt) {
           head.rotationTimer.t + diffDist - head.rotationTimer.duration;
       timer::update(head.rotationTimer, diffDist);
       if (timer::isComplete(head.rotationTimer)) {
-        LOG(INFO) << "FLIP" << LOG_ENDL;
+        LOG(INFO) << "Head done rotating" << LOG_ENDL;
         head.isRotating = false;
         timer::start(head.rotationTimer);
-        head.x = halfWidth + diffDist + distOverage;
+        head.x = head.prevX + diffDist + distOverage;
         head.y = head.prevY + head.h;
         head.prevY = head.y;
+        // trainCheckSetHeadRotationOrNext(head, state, head.x);
       } else {
         head.isRotating = true;
-        head.x = halfWidth;
+        head.x = head.prevX;
         head.y = head.prevY + static_cast<double>(head.h) *
                                   timer::getPct(head.rotationTimer);
       }
@@ -126,67 +232,80 @@ void updateTrain(Train& head, int dt) {
     double nextX =
         prev->x + (cart->hDirection == TRAIN_RIGHT ? -head.w : head.w);
 
-    if (prev->hDirection == cart->hDirection && !prev->isRotating) {
-      // keep it
-      cart->y = prev->y;
-    } else if (!cart->isRotating && prev->isRotating) {
-      nextX += (cart->hDirection == TRAIN_RIGHT ? prev->rotationTimer.t
-                                                : -prev->rotationTimer.t);
-    }
-    // begin rotation when directions are different and this cart is not
-    // rotating begin rotation when directions are the same and this cart is not
-    // rotating
-    else if (!cart->isRotating &&
-             ((prev->hDirection != cart->hDirection) ||
-              (prev->hDirection == cart->hDirection && prev->isRotating))) {
-      cart->isRotating = true;
-      timer::start(cart->rotationTimer);
-      cart->hDirection =
-          cart->hDirection == TRAIN_RIGHT ? TRAIN_LEFT : TRAIN_RIGHT;
+    if (!cart->isRotating) {
+      // update position
+      if (prev->hDirection == cart->hDirection) {
+        // keep it
+        cart->y = prev->y;
+      } else if (prev->isRotating) {
+        nextX += (cart->hDirection == TRAIN_RIGHT ? prev->rotationTimer.t
+                                                  : -prev->rotationTimer.t);
+      }
 
-      // distance away from wall
-      // double diffFromWall =
-      //     (prev->hDirection == TRAIN_LEFT ? w - halfWidth - prev->x
-      //                                     : prev->x - 0 - halfWidth);
-      // double remainingDist = prev->w - diffFromWall;
-      // if (remainingDist > 0) {
-      //   nextX = prev->hDirection == TRAIN_LEFT ? w - halfWidth -
-      //   remainingDist
-      //                                          : remainingDist + halfWidth;
-      // } else {
-      //   cart->hDirection =
-      //       cart->hDirection == TRAIN_RIGHT ? TRAIN_LEFT : TRAIN_RIGHT;
-      //   nextX = prev->x + (cart->hDirection == TRAIN_RIGHT ? -head.w :
-      //   head.w);
-      // }
+      // check if cart should be rotating
+      if (((prev->hDirection != cart->hDirection && !prev->isRotating) ||
+           (prev->hDirection == cart->hDirection && prev->isRotating))) {
+        cart->isRotating = true;
+        timer::start(cart->rotationTimer);
+        trainSwapHDirection(*cart);
+        cart->prevX = cart->x;
+        // cart->prevY = cart->y;
+        LOG(INFO) << "  Start cart rotation" << LOG_ENDL;
+        // cart->prevX =
+        // cart->hDirection =
+        //     cart->hDirection == TRAIN_RIGHT ? TRAIN_LEFT : TRAIN_RIGHT;
+
+        // distance away from wall
+        // double diffFromWall =
+        //     (prev->hDirection == TRAIN_LEFT ? w - halfWidth - prev->x
+        //                                     : prev->x - 0 - halfWidth);
+        // double remainingDist = prev->w - diffFromWall;
+        // if (remainingDist > 0) {
+        //   nextX = prev->hDirection == TRAIN_LEFT ? w - halfWidth -
+        //   remainingDist
+        //                                          : remainingDist + halfWidth;
+        // } else {
+        //   cart->hDirection =
+        //       cart->hDirection == TRAIN_RIGHT ? TRAIN_LEFT : TRAIN_RIGHT;
+        //   nextX = prev->x + (cart->hDirection == TRAIN_RIGHT ? -head.w :
+        //   head.w);
+        // }
+      }
     }
 
     if (cart->isRotating) {
       // assumes grid-based rotation (could break with collisions to other
       // trains unless that's also grid based)
       if (prev->isRotating) {
-        LOG(INFO) << "Determine from prev rotation" << LOG_ENDL;
+        // LOG(INFO) << "Determine from prev rotation" << LOG_ENDL;
         cart->rotationTimer.t = prev->rotationTimer.t;
       } else {
         double prevDiffFromWall =
-        (prev->hDirection == TRAIN_LEFT ? w - halfWidth - prev->x
-          : prev->x - 0 - halfWidth);
-          // double remainingDist = prev->w - prevDiffFromWall;
-          // LOG(INFO) << "Determine from prev dist: " << prevDiffFromWall << " " << cart->rotationTimer.duration << LOG_ENDL;
-        cart->rotationTimer.t = prevDiffFromWall;
+            (prev->hDirection == TRAIN_LEFT ? prev->prevX - prev->x
+                                            : prev->x - prev->prevX);
+        // double remainingDist = prev->w - prevDiffFromWall;
+        // LOG(INFO) << "Determine from prev dist: " << prevDiffFromWall << " "
+        // << cart->rotationTimer.duration << LOG_ENDL;
+        // if (cart->rotationTimer.t
+        if (prevDiffFromWall > cart->rotationTimer.t) {
+          cart->rotationTimer.t = prevDiffFromWall;
+        } else {
+          // rough approx
+          cart->rotationTimer.t += dt * cart->speed;
+        }
       }
 
       double distOverage = cart->rotationTimer.t - cart->rotationTimer.duration;
       if (timer::isComplete(cart->rotationTimer)) {
         cart->isRotating = false;
         timer::start(prev->rotationTimer);
-        nextX = (prev->hDirection == TRAIN_LEFT ? w - halfWidth - distOverage
-                                                : halfWidth + distOverage);
+        nextX = (prev->hDirection == TRAIN_LEFT ? prev->prevX - distOverage
+                                                : prev->prevX + distOverage);
         cart->y = cart->prevY + cart->h;
         cart->prevY = cart->y;
-        LOG(INFO) << "FLIP Cart" << LOG_ENDL;
+        LOG(INFO) << "  Cart done rotating" << LOG_ENDL;
       } else {
-        nextX = prev->hDirection == TRAIN_LEFT ? w - halfWidth : halfWidth;
+        nextX = prev->hDirection == TRAIN_LEFT ? prev->prevX : prev->prevX;
         cart->y = cart->prevY + static_cast<double>(cart->h) *
                                     timer::getPct(cart->rotationTimer);
       }
@@ -226,6 +345,11 @@ void updateTrain(Train& head, int dt) {
     prev = cart;
     cart = cart->next.get();
   }
+
+  // if (dt > 0) {
+  //   // HACK prevent flicker BUT AT WHAT COST
+  //   updateTrain(head, state, 0);
+  // }
 }
 
 void renderTrainFromHead(Train& head, Render& renderer) {
@@ -242,6 +366,12 @@ int main(int argc, char** argv) {
   LOG(INFO) << "Start program" << LOG_ENDL;
   auto [windowPtr, storePtr] = test::setupTest(argc, argv, w, h);
   sdl2w::Window& window = *windowPtr;
+  State state;
+
+  state.playAreaHeightTiles = 10;
+  state.playAreaWidthTiles = 10;
+  state.playAreaXOffset = 50;
+  state.playAreaYOffset = 100;
 
   auto& events = window.getEvents();
   auto& d = window.getDraw();
@@ -252,9 +382,25 @@ int main(int argc, char** argv) {
   Render gameRenderer(window);
   gameRenderer.setup();
 
-  auto head1 = std::unique_ptr<Train>(createTrain(50, 10));
-  // createCart(head1.get());
-  // createCart(head1.get());
+  auto head1 = createTrain(state, 3, 0);
+  // createCart(head1);
+  // createCart(head1);
+  // createCart(head1);
+  // createCart(head1);
+  // createCart(head1);
+
+  createBush(state, 5, 0);
+  createBush(state, 4, 1);
+  createBush(state, 3, 1);
+
+  // createBush(state, 5, 0);
+  // createBush(state, 3, 1);
+  // createBush(state, 5, 2);
+  // createBush(state, 3, 3);
+  // createBush(state, 5, 4);
+  // createBush(state, 3, 5);
+  // createBush(state, 5, 6);
+  // createBush(state, 3, 7);
 
   auto _initializeLoop = [&]() {
     sdl2w::renderSplash(window);
@@ -265,15 +411,35 @@ int main(int argc, char** argv) {
 
   };
 
+  int timeDilation = 0;
+
   auto _mainLoop = [&]() {
     int dt = window.getDeltaTime();
     d.setBackgroundColor({10, 10, 10});
 
-    gameRenderer.updateAnimations(dt);
+    gameRenderer.updateAnimations(dt - timeDilation);
 
-    updateTrain(*head1, dt);
-    window.getDraw().drawRect(0, 0, 100, 100, {127, 127, 127, 255});
-    renderTrainFromHead(*head1, gameRenderer);
+    for (const auto& trainHead : state.trainHeads) {
+      updateTrain(*trainHead, state, dt - timeDilation);
+    }
+
+    window.getDraw().drawRect(state.playAreaXOffset,
+                              state.playAreaYOffset,
+                              state.playAreaWidthTiles * TILE_WIDTH,
+                              state.playAreaHeightTiles * TILE_HEIGHT,
+                              {127, 127, 127, 255});
+
+    for (const auto& pair : state.bushes) {
+      gameRenderer.renderBush(*pair.second);
+    }
+
+    for (const auto& trainHead : state.trainHeads) {
+      renderTrainFromHead(*trainHead, gameRenderer);
+    }
+
+    // LOG(INFO) << "IND: " << getPlayerAreaIndFromPos(state, head1->x,
+    // head1->y)
+    //           << LOG_ENDL;
 
     return true;
   };
