@@ -25,6 +25,7 @@ public:
   void renderBush(const Bush& bush);
   void renderPlayer(const Player& player);
   void renderTrain(const Train& train);
+  void renderTrainFromHead(const Train& head);
   void renderBullet(const Bullet& bullet);
   void renderBomber(const Bomber& bomber);
   void renderAirplane(const Airplane& plane);

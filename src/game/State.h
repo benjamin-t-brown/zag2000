@@ -5,6 +5,7 @@
 #include "lib/sdl2w/Animation.h"
 #include "utils/Timer.hpp"
 #include <memory>
+#include <optional>
 #include <unordered_map>
 #include <vector>
 
@@ -15,13 +16,19 @@ namespace program {
 constexpr int TILE_WIDTH = 25;
 constexpr int TILE_HEIGHT = 25;
 
+struct Removable {
+  int id;
+  bool shouldRemove = false;
+};
+
 struct Particle {
   std::unique_ptr<sdl2w::Animation> animation;
+  Timer timer;
   int x = 0;
   int y = 0;
 };
 
-struct Bush {
+struct Bush : Removable {
   int hp = 4;
   int x = 0;
   int y = 0;
@@ -36,23 +43,24 @@ enum TrainDirectionH {
   TRAIN_LEFT,
   TRAIN_RIGHT,
 };
-struct Train {
+struct Train : Removable {
   std::unique_ptr<Train> next;
   Timer rotationTimer = Timer{TILE_WIDTH};
   double x = 0.;
   double y = 0.;
   double prevX = 0.;
   double prevY = 0.;
-  double speed = .1;
+  double speed = .15;
   TrainDirectionH hDirection = TRAIN_RIGHT;
   TrainDirectionV vDirection = TRAIN_DOWN;
   int w = TILE_WIDTH;
   int h = TILE_HEIGHT;
   bool isHead = true;
   bool isRotating = false;
+  bool isPoisoned = false;
 };
 
-struct Bomber {
+struct Bomber : Removable {
   Physics physics;
   Timer shootTimer;
   int w = TILE_WIDTH;
@@ -60,13 +68,13 @@ struct Bomber {
   double speed = .1;
 };
 
-struct Bomb {
+struct Bomb : Removable {
   Timer transformTimer;
   double x = 0;
   double y = 0;
 };
 
-struct Airplane {
+struct Airplane : Removable {
   Physics physics;
   int w = TILE_WIDTH;
   int h = TILE_HEIGHT;
@@ -77,7 +85,7 @@ enum DuoMissileType {
   DUO_MISSILE_SINGLE,
 };
 
-struct DuoMissile {
+struct DuoMissile : Removable {
   Physics physics;
   Timer splitTimer;
   DuoMissileType type = DUO_MISSILE_COMBINED;
@@ -85,7 +93,7 @@ struct DuoMissile {
   int h = TILE_HEIGHT;
 };
 
-struct Bullet {
+struct Bullet : Removable {
   Physics physics;
   int w = 2;
   int h = 10;
@@ -122,13 +130,14 @@ struct State {
   int playAreaHeightTiles = 0;
   int playAreaXOffset = 0;
   int playAreaYOffset = 0;
+  int score = 0;
 };
 
-inline void enqueueAction(State& state,
-                          std::unique_ptr<actions::AbstractAction> action,
-                          int ms) {
-  auto actionPtr = new actions::AsyncAction{std::move(action),
-                                            Timer{static_cast<double>(ms), 0}};
+inline void
+enqueueAction(State& state, actions::AbstractAction* action, int ms) {
+  auto actionPtr =
+      new actions::AsyncAction{std::unique_ptr<actions::AbstractAction>(action),
+                               Timer{static_cast<double>(ms), 0}};
   state.sequentialActionsNext.push_back(
       std::unique_ptr<actions::AsyncAction>(actionPtr));
 }
@@ -147,6 +156,48 @@ inline void moveSequentialActions(State& state) {
       std::make_move_iterator(state.sequentialActionsNext.begin()),
       std::make_move_iterator(state.sequentialActionsNext.end()));
   state.sequentialActionsNext.clear();
+}
+
+inline std::optional<Bullet*> findBulletByPtr(State& state, Bullet* bulletPtr) {
+  for (auto& bullet : state.bullets) {
+    if (bullet.get() == bulletPtr) {
+      return bullet.get();
+    }
+  }
+  return std::nullopt;
+}
+inline std::optional<Train*> findTrainByPtr(State& state, Train* trainPtr) {
+  for (auto& train : state.trainHeads) {
+    if (train.get() == trainPtr) {
+      return train.get();
+    }
+  }
+  return std::nullopt;
+}
+inline std::optional<Bomber*> findBomberByPtr(State& state, Bomber* bomberPtr) {
+  for (auto& bomber : state.bombers) {
+    if (bomber.get() == bomberPtr) {
+      return bomber.get();
+    }
+  }
+  return std::nullopt;
+}
+inline std::optional<Bomb*> findBombByPtr(State& state, Bomb* bombPtr) {
+  for (auto& bomb : state.bombs) {
+    if (bomb.get() == bombPtr) {
+      return bomb.get();
+    }
+  }
+  return std::nullopt;
+}
+inline std::optional<Airplane*> findAirplaneByPtr(State& state,
+                                                  Airplane* airplanePtr) {
+  for (auto& airplane : state.airplanes) {
+    if (airplane.get() == airplanePtr) {
+      return airplane.get();
+    }
+  }
+  return std::nullopt;
 }
 
 } // namespace program

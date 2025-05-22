@@ -1,3 +1,4 @@
+#include "game/GameManager.h"
 #include "lib/sdl2w/AssetLoader.h"
 #include "lib/sdl2w/Draw.h"
 #include "lib/sdl2w/Events.h"
@@ -5,6 +6,7 @@
 #include "lib/sdl2w/L10n.h"
 #include "lib/sdl2w/Logger.h"
 #include "utils/Timer.hpp"
+#include <SDL2/SDL_timer.h>
 
 void runProgram(int argc, char** argv) {
   const int w = 640;
@@ -32,8 +34,8 @@ void runProgram(int argc, char** argv) {
   assetLoader.loadAssetsFromFile(sdl2w::ASSET_FILE, "assets/assets.txt");
 
   sdl2w::Draw& d = window.getDraw();
-  // program::GameManager game(window);
-  // game.load();
+  program::GameManager game(window);
+  game.load();
   window.setSoundPct(33);
 
   auto& events = window.getEvents();
@@ -53,7 +55,7 @@ void runProgram(int argc, char** argv) {
     //   // game.state.wins = hiscores[0].score;
     // }
 
-    // game.start();
+    game.start();
   };
 
   auto _mainLoop = [&]() {
@@ -65,8 +67,10 @@ void runProgram(int argc, char** argv) {
     }
 #endif
 
-    // game.update(std::min(window.getDeltaTime(), 100));
-    // game.render();
+    game.update(std::min(window.getDeltaTime(), 100));
+    // game.update(8);
+    game.render();
+    // SDL_Delay(33);
     return true;
   };
 
@@ -78,7 +82,6 @@ int main(int argc, char** argv) {
   sdl2w::Window::init();
   srand(time(NULL));
 
-  program::Timer timer;
   runProgram(argc, argv);
 
   sdl2w::Window::unInit();

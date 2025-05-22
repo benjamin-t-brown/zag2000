@@ -140,6 +140,13 @@ void Render::renderTrain(const Train& train) {
       });
 }
 
+void Render::renderTrainFromHead(const Train& head) {
+  if (head.next) {
+    renderTrainFromHead(*head.next.get());
+  }
+  renderTrain(head);
+}
+
 void Render::renderBullet(const Bullet& bullet) {}
 
 void Render::renderBomber(const Bomber& bomber) {}

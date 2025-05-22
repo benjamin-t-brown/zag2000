@@ -6,6 +6,7 @@
 #include "lib/sdl2w/Logger.h"
 #include "utils/Timer.hpp"
 #include <SDL2/SDL_timer.h>
+#include <cmath>
 #include <memory>
 
 using namespace program;
@@ -25,6 +26,8 @@ Train* createCart(Train* head) {
     node = node->next.get();
   }
   Train* cart = new Train();
+  cart->x = head->x;
+  cart->y = head->y;
   cart->prevY = head->prevY;
   cart->hDirection = head->hDirection;
   cart->vDirection = head->vDirection;
@@ -102,7 +105,13 @@ void trainCheckSetHeadRotationOrNext(Train& head, State& state, double nextX) {
       state.playAreaYOffset + state.playAreaHeightTiles * TILE_HEIGHT;
   const double upperBound = state.playAreaYOffset;
 
-  if (nextX > rightBound && head.hDirection == TRAIN_RIGHT) {
+  if (head.isPoisoned) {
+    LOG(INFO) << "START HEAD ROTATION POISON" << LOG_ENDL;
+    head.isRotating = true;
+    timer::start(head.rotationTimer);
+    trainSwapHDirection(head);
+    head.prevX = head.x;
+  } else if (nextX > rightBound && head.hDirection == TRAIN_RIGHT) {
     LOG(INFO) << "START HEAD ROTATION" << LOG_ENDL;
     head.isRotating = true;
     timer::start(head.rotationTimer);
@@ -158,9 +167,9 @@ void trainCheckSetHeadRotationOrNext(Train& head, State& state, double nextX) {
 
   // rotating set this tick
   if (head.isRotating) {
-    if (head.y + head.h > lowerBound) {
+    if (head.vDirection == TRAIN_DOWN && head.y + head.h > lowerBound) {
       head.vDirection = TRAIN_UP;
-    } else if (head.y - head.h < upperBound) {
+    } else if (head.vDirection == TRAIN_UP && head.y - head.h < upperBound) {
       head.vDirection = TRAIN_DOWN;
     }
   }
@@ -169,9 +178,6 @@ void trainCheckSetHeadRotationOrNext(Train& head, State& state, double nextX) {
 void updateTrain(Train& head, State& state, int dt) {
   double dx = head.hDirection == TRAIN_RIGHT ? head.speed : -head.speed;
   double nextX = head.x + dx * dt;
-  const double lowerBound =
-      state.playAreaYOffset + state.playAreaHeightTiles * TILE_HEIGHT;
-  const double upperBound = state.playAreaYOffset;
   // const double halfWidth = head.w / 2.;
   // const double leftBound = state.playAreaXOffset + halfWidth;
   // const double rightBound =
@@ -245,11 +251,26 @@ void updateTrain(Train& head, State& state, int dt) {
         head.y = head.vDirection == TRAIN_DOWN ? head.prevY + head.h
                                                : head.prevY - head.h;
         head.prevY = head.y;
+
+        if (head.isPoisoned) {
+          const double lowerBound =
+              state.playAreaYOffset + state.playAreaHeightTiles * TILE_HEIGHT;
+          const double upperBound = state.playAreaYOffset;
+          if (head.vDirection == TRAIN_DOWN && head.y + head.h > lowerBound) {
+            head.isPoisoned = false;
+          } else if (head.vDirection == TRAIN_UP &&
+                     head.y - head.h < upperBound) {
+            head.isPoisoned = false;
+          }
+        }
         // if (head.y + head.h
         // trainCheckSetHeadRotationOrNext(head, state, head.x);
       } else {
         head.isRotating = true;
-        head.x = head.prevX;
+        double t = timer::getPct(head.rotationTimer);
+        double offset = (head.w / 4.) * std::sin(PI * t) *
+                        (head.hDirection == TRAIN_LEFT ? 1 : -1);
+        head.x = head.prevX + offset;
         // head.y = head.prevY + static_cast<double>(head.h) *
         //                           timer::getPct(head.rotationTimer);
         head.y = head.prevY + (head.vDirection == TRAIN_DOWN
@@ -271,10 +292,26 @@ void updateTrain(Train& head, State& state, int dt) {
         head.y =
             head.prevY + (head.vDirection == TRAIN_DOWN ? head.h : -head.h);
         head.prevY = head.y;
+
+        if (head.isPoisoned) {
+          const double lowerBound =
+              state.playAreaYOffset + state.playAreaHeightTiles * TILE_HEIGHT;
+          const double upperBound = state.playAreaYOffset;
+          if (head.vDirection == TRAIN_DOWN && head.y + head.h > lowerBound) {
+            head.isPoisoned = false;
+          } else if (head.vDirection == TRAIN_UP &&
+                     head.y - head.h < upperBound) {
+            head.isPoisoned = false;
+          }
+        }
+
         // trainCheckSetHeadRotationOrNext(head, state, head.x);
       } else {
         head.isRotating = true;
-        head.x = head.prevX;
+        double t = timer::getPct(head.rotationTimer);
+        double offset = (head.w / 4.) * std::sin(PI * t) *
+                        (head.hDirection == TRAIN_LEFT ? 1 : -1);
+        head.x = head.prevX + offset;
         head.y = head.prevY + (head.vDirection == TRAIN_DOWN
                                    ? static_cast<double>(head.h) *
                                          timer::getPct(head.rotationTimer)
@@ -306,7 +343,7 @@ void updateTrain(Train& head, State& state, int dt) {
         cart->isRotating = true;
         timer::start(cart->rotationTimer);
         trainSwapHDirection(*cart);
-        cart->vDirection = prev->vDirection;
+        // cart->vDirection = prev->vDirection;
         cart->prevX = cart->x;
         // cart->prevY = cart->y;
         LOG(INFO) << "  Start cart rotation" << LOG_ENDL;
@@ -330,6 +367,20 @@ void updateTrain(Train& head, State& state, int dt) {
         //   head.w);
         // }
       }
+
+      // if rotating this tick
+      // if (cart->isRotating) {
+      //   const double lowerBound =
+      //       state.playAreaYOffset + state.playAreaHeightTiles * TILE_HEIGHT;
+      //   const double upperBound = state.playAreaYOffset;
+      //   if (cart->vDirection == TRAIN_DOWN && cart->y + cart->h > lowerBound)
+      //   {
+      //     cart->vDirection = TRAIN_UP;
+      //   } else if (cart->vDirection == TRAIN_UP &&
+      //              cart->y - cart->h < upperBound) {
+      //     cart->vDirection = TRAIN_DOWN;
+      //   }
+      // }
     }
 
     if (cart->isRotating) {
@@ -364,9 +415,23 @@ void updateTrain(Train& head, State& state, int dt) {
         cart->y = (cart->vDirection == TRAIN_DOWN ? cart->prevY + cart->h
                                                   : cart->prevY - cart->h);
         cart->prevY = cart->y;
+        // cart->vDirection = prev->vDirection;
+        const double lowerBound =
+            state.playAreaYOffset + state.playAreaHeightTiles * TILE_HEIGHT;
+        const double upperBound = state.playAreaYOffset;
+        if (cart->vDirection == TRAIN_DOWN && cart->y + cart->h > lowerBound) {
+          cart->vDirection = TRAIN_UP;
+        } else if (cart->vDirection == TRAIN_UP &&
+                   cart->y - cart->h < upperBound) {
+          cart->vDirection = TRAIN_DOWN;
+        }
         LOG(INFO) << "  Cart done rotating" << LOG_ENDL;
       } else {
         nextX = prev->hDirection == TRAIN_LEFT ? prev->prevX : prev->prevX;
+        double t = timer::getPct(cart->rotationTimer);
+        double offset = (cart->w / 4.) * std::sin(PI * t) *
+                        (cart->hDirection == TRAIN_LEFT ? 1 : -1);
+        nextX = nextX + offset;
         // cart->y = cart->prevY + static_cast<double>(cart->h) *
         //                             timer::getPct(cart->rotationTimer);
         cart->y = cart->prevY + (cart->vDirection == TRAIN_DOWN
@@ -448,38 +513,41 @@ int main(int argc, char** argv) {
   Render gameRenderer(window);
   gameRenderer.setup();
 
-  // auto head1 = createTrain(state, 3, 0);
-  // for (int i = 0; i < 5; i++) {
-  //   createCart(head1);
-  // }
-  // createCart(head1);
-  // createCart(head1);
-  // createCart(head1);
-  // createCart(head1);
-
-  // auto head2 = createTrain(state, 8, 1);
-  // head2->hDirection = TRAIN_LEFT;
-  // for (int i = 0; i < 5; i++) {
-  //   createCart(head2);
-  // }
-
-  auto head3 = createTrain(state, 5, 9);
+  auto head1 = createTrain(state, 3, 0);
   for (int i = 0; i < 5; i++) {
-    createCart(head3);
+    createCart(head1);
+  }
+  // createCart(head1);
+  // createCart(head1);
+  // createCart(head1);
+  // createCart(head1);
+
+  auto head2 = createTrain(state, 8, 1);
+  head2->hDirection = TRAIN_LEFT;
+  for (int i = 0; i < 5; i++) {
+    createCart(head2);
   }
 
-  createBush(state, 5, 0);
-  createBush(state, 6, 2);
-  createBush(state, 3, 1);
+  auto head3 = createTrain(state, 7, 1);
+  for (int i = 0; i < 1; i++) {
+    createCart(head3);
+  }
+  head3->isPoisoned = true;
 
   // createBush(state, 5, 0);
+  // createBush(state, 6, 2);
   // createBush(state, 3, 1);
-  // createBush(state, 5, 2);
-  // createBush(state, 3, 3);
-  // createBush(state, 5, 4);
-  // createBush(state, 3, 5);
-  // createBush(state, 5, 6);
-  // createBush(state, 3, 7);
+
+  createBush(state, 5, 0);
+  createBush(state, 3, 1);
+  createBush(state, 5, 2);
+  createBush(state, 3, 3);
+  createBush(state, 5, 4);
+  createBush(state, 3, 5);
+  createBush(state, 5, 6);
+  createBush(state, 3, 7);
+  createBush(state, 5, 8);
+  // createBush(state, 3, 9);
 
   auto _initializeLoop = [&]() {
     sdl2w::renderSplash(window);

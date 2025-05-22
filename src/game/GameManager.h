@@ -3,7 +3,6 @@
 #include "client/Render.h"
 #include "game/actions/AbstractAction.h"
 #include "State.h"
-#include <memory>
 #include <string>
 
 namespace program {
@@ -13,8 +12,6 @@ class GameManager {
   sdl2w::Window& window;
   Render r;
   std::string lastKeyPressed;
-
-  std::vector<std::unique_ptr<actions::AbstractAction>> persistentActions;
 
 public:
   GameManager(sdl2w::Window& windowA);
