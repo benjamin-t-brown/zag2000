@@ -20,6 +20,7 @@ public:
   void load();
   void start();
   void handleKeyPress(const std::string& key);
+  void handleKeyRelease(const std::string& key);
   void update(int dt);
   void render();
 };

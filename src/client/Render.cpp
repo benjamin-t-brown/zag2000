@@ -39,8 +39,10 @@ void Render::renderBush(const Bush& bush) {
     return;
   }
 
+  int bushInd = 4 * bush.variant + 4 - bush.hp;
+
   std::stringstream ss;
-  ss << "bush0_" << 4 - bush.hp;
+  ss << "bush1_" << bushInd;
   window.getDraw().drawSprite(
       //
       window.getStore().getSprite(ss.str()),
@@ -55,7 +57,20 @@ void Render::renderPlayer(const Player& player) {
     return;
   }
   std::stringstream ss;
-  ss << "player" << (player.canShoot ? 1 : 0);
+  int spriteInd = 0;
+  ss << "player_";
+
+  if (player.controls.left) {
+    spriteInd = 2;
+  } else if (player.controls.right) {
+    spriteInd = 4;
+  }
+
+  if (player.canShoot) {
+    spriteInd++;
+  }
+  ss << spriteInd;
+
   window.getDraw().drawSprite(
       //
       window.getStore().getSprite(ss.str()),
@@ -67,7 +82,7 @@ void Render::renderPlayer(const Player& player) {
 
 void Render::renderTrain(const Train& train) {
   std::stringstream ss;
-  ss << (train.isHead ? "train0" : "cart0");
+  ss << (train.isHead ? "train1" : "cart1");
   bool flip = false;
 
   if (train.isRotating) {
@@ -147,7 +162,13 @@ void Render::renderTrainFromHead(const Train& head) {
   renderTrain(head);
 }
 
-void Render::renderBullet(const Bullet& bullet) {}
+void Render::renderBullet(const Bullet& bullet) {
+  window.getDraw().drawRect(static_cast<int>(bullet.physics.x) - bullet.w / 2,
+                            static_cast<int>(bullet.physics.y) - bullet.h / 2,
+                            bullet.w,
+                            bullet.h,
+                            {255, 255, 255, 255});
+}
 
 void Render::renderBomber(const Bomber& bomber) {}
 
@@ -155,6 +176,18 @@ void Render::renderAirplane(const Airplane& plane) {}
 
 void Render::renderDuoMissile(const DuoMissile& missile) {}
 
-void Render::renderParticle(const Particle& particle) {}
+void Render::renderParticle(const Particle& particle) {
+  if (particle.animation->isInitialized()) {
+    window.getDraw().drawAnimation(
+        //
+        *particle.animation,
+        RenderableParamsEx{
+            //
+            .scale = {TILE_SCALE, TILE_SCALE},
+            .x = particle.x,
+            .y = particle.y,
+        });
+  }
+}
 
 } // namespace program

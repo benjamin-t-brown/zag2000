@@ -15,6 +15,8 @@ namespace program {
 // constexpr int TILE_HEIGHT = 33;
 constexpr int TILE_WIDTH = 25;
 constexpr int TILE_HEIGHT = 25;
+constexpr double TILE_WIDTH_D = static_cast<double>(TILE_WIDTH);
+constexpr double TILE_HEIGHT_D = static_cast<double>(TILE_HEIGHT);
 
 struct Removable {
   int id;
@@ -24,14 +26,17 @@ struct Removable {
 struct Particle {
   std::unique_ptr<sdl2w::Animation> animation;
   Timer timer;
+  std::string animName;
   int x = 0;
   int y = 0;
+  int ms = 0;
 };
 
 struct Bush : Removable {
   int hp = 4;
   int x = 0;
   int y = 0;
+  int variant = 0;
   bool marked = false;
 };
 
@@ -50,7 +55,7 @@ struct Train : Removable {
   double y = 0.;
   double prevX = 0.;
   double prevY = 0.;
-  double speed = .15;
+  double speed = 0.;
   TrainDirectionH hDirection = TRAIN_RIGHT;
   TrainDirectionV vDirection = TRAIN_DOWN;
   int w = TILE_WIDTH;
@@ -100,8 +105,18 @@ struct Bullet : Removable {
   double speed = .1;
 };
 
+struct PlayerControls {
+  bool up = false;
+  bool down = false;
+  bool left = false;
+  bool right = false;
+  bool shoot = false;
+};
+
 struct Player {
-  Physics physics;
+  Physics physics{.friction = 0.03};
+  PlayerControls controls;
+  double acc = 0.0065;
   int level = 0;
   int score = 0;
   int lives = 3;
@@ -109,6 +124,13 @@ struct Player {
   int h = TILE_HEIGHT;
   bool dead = false;
   bool canShoot = false;
+};
+
+enum ControlState {
+  CONTROL_MENU,
+  CONTROL_IN_GAME,
+  CONTROL_DEFEATED,
+  CONTROL_SHOWING_HIGH_SCORE
 };
 
 struct State {
@@ -126,10 +148,12 @@ struct State {
   std::vector<std::string> soundsToPlay;
   Player player;
 
+  ControlState controlState = CONTROL_MENU;
   int playAreaWidthTiles = 0;
   int playAreaHeightTiles = 0;
   int playAreaXOffset = 0;
   int playAreaYOffset = 0;
+  int playAreaBottomYStart = 0;
   int score = 0;
 };
 
@@ -171,9 +195,19 @@ inline std::optional<Train*> findTrainByPtr(State& state, Train* trainPtr) {
     if (train.get() == trainPtr) {
       return train.get();
     }
+    Train* nextTrain = train->next.get();
+    while (nextTrain) {
+      if (nextTrain == trainPtr) {
+        return nextTrain;
+      }
+      nextTrain = nextTrain->next.get();
+    }
   }
+  LOG(WARN) << "Train not found by pointer: " << trainPtr
+            << LOG_ENDL;
   return std::nullopt;
 }
+
 inline std::optional<Bomber*> findBomberByPtr(State& state, Bomber* bomberPtr) {
   for (auto& bomber : state.bombers) {
     if (bomber.get() == bomberPtr) {

@@ -36,8 +36,8 @@ inline Train* createCart(Train* head) {
 
 class SpawnTrain : public AbstractAction {
   std::pair<int, int> tilePos;
-  int numCarts = 5;
-  double speed = 0.15;
+  int numCarts;
+  double speed;
 
   void act() override {
     State& localState = *this->state;

@@ -1,5 +1,7 @@
 #pragma once
 
+#include <utility>
+
 namespace program {
 constexpr double PI = 3.14159265358979323846;
 
@@ -26,4 +28,13 @@ struct Heading {
   double rotationRate = 0.25;
   HeadingTurnDirection turnDirection = NONE;
 };
-} // namespace Program
+
+namespace physics {
+
+std::pair<double, double> getPos(const Physics& physics);
+void applyForce(Physics& physics, double headingDeg, double acc);
+void updateHeading(Heading& heading, const int dt);
+void updatePhysics(Physics& physics, const int dt);
+} // namespace physics
+
+} // namespace program

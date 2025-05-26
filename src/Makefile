@@ -7,7 +7,10 @@ CODE=\
 client/Render.cpp\
 game/Physics.cpp\
 game/GameManager.cpp\
+game/updaters/CheckCollisions.cpp\
+game/updaters/UpdatePlayer.cpp\
 game/updaters/UpdateTrain.cpp\
+game/updaters/UpdateBullet.cpp\
 
 LIB_CODE=\
 lib/hiscore/hiscore.cpp

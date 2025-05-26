@@ -79,14 +79,218 @@ cart0_11 100
 cart0_10 100
 EndAnim
 
+Pic,train1,assets/img/train1.png
+Sprites,train1,16,40,33
+Anim,train1_left,loop
+train1_0 100
+train1_1 100
+train1_2 100
+train1_1 100
+EndAnim
+Anim,train1_down,loop
+train1_3 100
+train1_4 100
+train1_5 100
+train1_4 100
+EndAnim
+Anim,train1_up,loop
+train1_6 100
+train1_7 100
+train1_8 100
+train1_7 100
+EndAnim
+Anim,train1_leftdown,loop
+train1_9 100
+train1_10 100
+train1_11 100
+train1_10 100
+EndAnim
+Anim,train1_leftup,loop
+train1_12 100
+train1_13 100
+train1_14 100
+train1_13 100
+EndAnim
+
+Pic,cart1,assets/img/cart1.png
+Sprites,cart1,12,40,33
+Anim,cart1_left,loop
+cart1_0 100
+cart1_1 100
+cart1_2 100
+cart1_1 100
+EndAnim
+Anim,cart1_down,loop
+cart1_3 100
+cart1_4 100
+cart1_5 100
+cart1_4 100
+EndAnim
+Anim,cart1_up,loop
+cart1_3 100
+cart1_4 100
+cart1_5 100
+cart1_4 100
+EndAnim
+Anim,cart1_leftdown,loop
+cart1_6 100
+cart1_7 100
+cart1_8 100
+cart1_7 100
+EndAnim
+Anim,cart1_leftup,loop
+cart1_9 100
+cart1_10 100
+cart1_11 100
+cart1_10 100
+EndAnim
+
+Pic,train2,assets/img/train2.png
+Sprites,train2,16,40,33
+Anim,train2_left,loop
+train2_0 100
+train2_1 100
+train2_2 100
+train2_1 100
+EndAnim
+Anim,train2_down,loop
+train2_3 100
+train2_4 100
+train2_5 100
+train2_4 100
+EndAnim
+Anim,train2_up,loop
+train2_6 100
+train2_7 100
+train2_8 100
+train2_7 100
+EndAnim
+Anim,train2_leftdown,loop
+train2_9 100
+train2_10 100
+train2_11 100
+train2_10 100
+EndAnim
+Anim,train2_leftup,loop
+train2_12 100
+train2_13 100
+train2_14 100
+train2_13 100
+EndAnim
+
+Pic,cart2,assets/img/cart2.png
+Sprites,cart2,12,40,33
+Anim,cart2_left,loop
+cart2_0 100
+cart2_1 100
+cart2_2 100
+cart2_1 100
+EndAnim
+Anim,cart2_down,loop
+cart2_3 100
+cart2_4 100
+cart2_5 100
+cart2_4 100
+EndAnim
+Anim,cart2_up,loop
+cart2_3 100
+cart2_4 100
+cart2_5 100
+cart2_4 100
+EndAnim
+Anim,cart2_leftdown,loop
+cart2_6 100
+cart2_7 100
+cart2_8 100
+cart2_7 100
+EndAnim
+Anim,cart2_leftup,loop
+cart2_9 100
+cart2_10 100
+cart2_11 100
+cart2_10 100
+EndAnim
+
+Pic,train3,assets/img/train3.png
+Sprites,train3,16,40,33
+Anim,train3_left,loop
+train3_0 100
+train3_1 100
+train3_2 100
+train3_1 100
+EndAnim
+Anim,train3_down,loop
+train3_3 100
+train3_4 100
+train3_5 100
+train3_4 100
+EndAnim
+Anim,train3_up,loop
+train3_6 100
+train3_7 100
+train3_8 100
+train3_7 100
+EndAnim
+Anim,train3_leftdown,loop
+train3_9 100
+train3_10 100
+train3_11 100
+train3_10 100
+EndAnim
+Anim,train3_leftup,loop
+train3_12 100
+train3_13 100
+train3_14 100
+train3_13 100
+EndAnim
+
+Pic,cart3,assets/img/cart3.png
+Sprites,cart3,12,40,33
+Anim,cart3_left,loop
+cart3_0 100
+cart3_1 100
+cart3_2 100
+cart3_1 100
+EndAnim
+Anim,cart3_down,loop
+cart3_3 100
+cart3_4 100
+cart3_5 100
+cart3_4 100
+EndAnim
+Anim,cart3_up,loop
+cart3_3 100
+cart3_4 100
+cart3_5 100
+cart3_4 100
+EndAnim
+Anim,cart3_leftdown,loop
+cart3_6 100
+cart3_7 100
+cart3_8 100
+cart3_7 100
+EndAnim
+Anim,cart3_leftup,loop
+cart3_9 100
+cart3_10 100
+cart3_11 100
+cart3_10 100
+EndAnim
+
 Pic,player,assets/img/player.png
-Sprites,player,2,40,33
+Sprites,player,6,40,33
 
 Pic,duo_missile,assets/img/duo_missile.png
 Sprites,duo_missile,4,40,33
 
 Pic,bush0,assets/img/bush0.png
-Sprites,bush0,4,40,33
+Sprites,bush0,32,40,33
+Pic,bush1,assets/img/bush1.png
+Sprites,bush1,32,40,33
+Pic,bush2,assets/img/bush2.png
+Sprites,bush2,32,40,33
+Pic,bush3,assets/img/bush3.png
+Sprites,bush3,32,40,33
 
 Pic,bomb,assets/img/bomb.png
 Sprites,bomb,1,8,8
@@ -97,6 +301,9 @@ EndAnim
 
 Pic,bomb_target,assets/img/bomb_target.png
 Sprites,bomb_target,1,8,8
+Anim,bomb_target,loop
+bomb_target_0 100
+EndAnim
 
 Pic,bomb_expl,assets/img/bomb_expl.png
 Sprites,bomb_expl,8,64,64
@@ -129,9 +336,27 @@ EndAnim
 
 Pic,expl_entity,assets/img/expl_entity.png
 Sprites,expl_entity,16,22,16
-Anim,expl_entity0,loop
+Anim,expl_entity0,noloop
 expl_entity_0 50
 expl_entity_1 50
 expl_entity_2 50
 expl_entity_3 50
+EndAnim
+Anim,expl_entity1,noloop
+expl_entity_4 50
+expl_entity_5 50
+expl_entity_6 50
+expl_entity_7 50
+EndAnim
+Anim,expl_entity2,noloop
+expl_entity_8 50
+expl_entity_9 50
+expl_entity_10 50
+expl_entity_11 50
+EndAnim
+Anim,expl_entity3,noloop
+expl_entity_12 50
+expl_entity_13 50
+expl_entity_14 50
+expl_entity_15 50
 EndAnim

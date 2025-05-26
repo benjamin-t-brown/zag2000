@@ -2,22 +2,21 @@
 #include <cmath>
 
 namespace program {
+namespace physics {
+std::pair<double, double> getPos(const Physics& physics) {
+  return {physics.x, physics.y};
+}
 
-inline double degreesToRadians(double degrees) {
-  return (degrees * PI) / 180.0;
-};
-inline double radiansToDegrees(double radians) {
-  return (radians * 180.) / PI;
-};
+double degreesToRadians(double degrees) { return (degrees * PI) / 180.0; };
+double radiansToDegrees(double radians) { return (radians * 180.) / PI; };
 
-inline std::pair<double, double> getVector(double angleDeg,
-                                           double magnitude = 1.) {
+std::pair<double, double> getVector(double angleDeg, double magnitude = 1.) {
   const double angleRad = degreesToRadians(angleDeg);
   return std::make_pair(std::sin(angleRad) * magnitude,
                         -std::cos(angleRad) * magnitude);
 };
 
-inline void applyDrag(Physics& physics, double dblDt) {
+void applyDrag(Physics& physics, double dblDt) {
   const double coeff = physics.friction;
 
   double forceX = 0.;
@@ -32,13 +31,13 @@ inline void applyDrag(Physics& physics, double dblDt) {
   physics.vy -= (forceY / physics.mass) * dblDt;
 }
 
-inline void applyForce(Physics& physics, double heading, double acc) {
-  const auto [nextAx, nextAy] = getVector(heading, acc);
-  physics.ax = nextAx;
-  physics.ay = nextAy;
+void applyForce(Physics& physics, double headingDeg, double acc) {
+  const auto [nextAx, nextAy] = getVector(headingDeg, acc);
+  physics.ax += nextAx;
+  physics.ay += nextAy;
 }
 
-inline void updateHeading(Heading& heading, const int dt) {
+void updateHeading(Heading& heading, const int dt) {
   double dblDt = static_cast<double>(dt);
   double mult = heading.turnDirection == HeadingTurnDirection::NONE   ? 0.
                 : heading.turnDirection == HeadingTurnDirection::LEFT ? -1.
@@ -52,7 +51,7 @@ inline void updateHeading(Heading& heading, const int dt) {
   }
 }
 
-inline void updatePhysics(Physics& physics, const int dt) {
+void updatePhysics(Physics& physics, const int dt) {
   const double dblDt = static_cast<double>(dt);
 
   const double vxMod = physics.ax / physics.mass;
@@ -85,4 +84,5 @@ inline void updatePhysics(Physics& physics, const int dt) {
   physics.ay = 0;
 }
 
+} // namespace physics
 } // namespace program

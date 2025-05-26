@@ -39,9 +39,12 @@ void runProgram(int argc, char** argv) {
   window.setSoundPct(33);
 
   auto& events = window.getEvents();
-  // events.setKeyboardEvent(
-  //     sdl2w::ON_KEY_PRESS,
-  //     [&](const std::string& key, int) { game.handleKeyPress(key); });
+  events.setKeyboardEvent(sdl2w::ON_KEY_DOWN, [&](const std::string& key, int) {
+    game.handleKeyPress(key);
+  });
+  events.setKeyboardEvent(sdl2w::ON_KEY_UP, [&](const std::string& key, int) {
+    game.handleKeyRelease(key);
+  });
 
   auto _initializeLoop = [&]() {
     sdl2w::renderSplash(window);

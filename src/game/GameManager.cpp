@@ -3,7 +3,12 @@
 #include "actions/spawns/SpawnBush.hpp"
 #include "actions/spawns/SpawnLevelBushes.hpp"
 #include "actions/spawns/SpawnTrain.hpp"
+#include "client/Keys.hpp"
+#include "lib/sdl2w/EmscriptenHelpers.h"
 #include "lib/sdl2w/Window.h"
+#include "updaters/CheckCollisions.h"
+#include "updaters/UpdateBullet.h"
+#include "updaters/UpdatePlayer.h"
 #include "updaters/UpdateTrain.h"
 #include "utils/Timer.hpp"
 
@@ -13,7 +18,10 @@ GameManager::GameManager(sdl2w::Window& windowA)
 
 GameManager::~GameManager() {}
 
-void GameManager::load() { r.setup(); }
+void GameManager::load() {
+  r.setup();
+  emshelpers::notifyGameReady();
+}
 
 void GameManager::start() {
   auto [renderWidth, renderHeight] = window.getDraw().getRenderSize();
@@ -23,21 +31,91 @@ void GameManager::start() {
       renderWidth / 2 - state.playAreaWidthTiles * TILE_WIDTH / 2;
   state.playAreaYOffset =
       renderHeight / 2 - state.playAreaHeightTiles * TILE_HEIGHT / 2;
+  state.playAreaBottomYStart =
+      (state.playAreaHeightTiles - 5) * TILE_HEIGHT + state.playAreaYOffset;
 
-  enqueueAction(state, new actions::SpawnBush(std::make_pair(15 - 4, 1)), 0);
-  enqueueAction(state, new actions::SpawnBush(std::make_pair(15 - 2, 2)), 0);
+  state.player.physics.x =
+      state.playAreaXOffset + state.playAreaWidthTiles * TILE_WIDTH / 2.;
+  state.player.physics.y =
+      state.playAreaBottomYStart + TILE_HEIGHT * 2 + TILE_HEIGHT / 2.;
+
+  // enqueueAction(state, new actions::SpawnBush(std::make_pair(15 - 3, 1)), 0);
+  // enqueueAction(state, new actions::SpawnBush(std::make_pair(15 - 3, 2)), 0);
+  // enqueueAction(state, new actions::SpawnBush(std::make_pair(15 - 3, 3)), 0);
+  // enqueueAction(state, new actions::SpawnBush(std::make_pair(15 - 3, 4)), 0);
   enqueueAction(state, new actions::SpawnLevelBushes(), 0);
   enqueueAction(
-      state, new actions::SpawnTrain(std::make_pair(9, 0), 5, 0.15), 0);
+      state, new actions::SpawnTrain(std::make_pair(9, 0), 8, 0.25), 0);
+
+  state.controlState = CONTROL_IN_GAME;
+  emshelpers::notifyGameStarted();
 }
 
-void GameManager::handleKeyPress(const std::string& key) {}
+void GameManager::handleKeyPress(const std::string& key) {
+  LOG(INFO) << "Key pressed: " << key << LOG_ENDL;
+  if (state.controlState == CONTROL_MENU) {
+    if (isConfirmKey(key)) {
+      start();
+    }
+  } else if (state.controlState == CONTROL_IN_GAME) {
+  }
+}
+
+void GameManager::handleKeyRelease(const std::string& key) {}
 
 void GameManager::update(int dt) {
+  updatePlayer(state.player, state, window.getEvents(), dt);
 
-  for (auto& trainHead : state.trainHeads) {
+  for (int i = 0; i < static_cast<int>(state.trainHeads.size()); i++) {
+    auto& trainHead = state.trainHeads[i];
     updateTrain(*trainHead, state, dt);
+
+    Train* prevTrain = trainHead.get();
+    Train* nextTrain = trainHead->next.get();
+    while (nextTrain) {
+      if (nextTrain->shouldRemove) {
+        prevTrain->next = nullptr;
+      }
+      prevTrain = nextTrain;
+      nextTrain = nextTrain->next.get();
+    }
+
+    if (trainHead->shouldRemove) {
+      state.trainHeads.erase(state.trainHeads.begin() + i);
+      i--;
+      continue;
+    }
   }
+
+  for (int i = 0; i < static_cast<int>(state.bullets.size()); i++) {
+    auto& bullet = state.bullets[i];
+    updateBullet(*bullet, state, dt);
+    if (bullet->shouldRemove) {
+      state.bullets.erase(state.bullets.begin() + i);
+      i--;
+      continue;
+    }
+  }
+
+  for (int i = 0; i < static_cast<int>(state.particles.size()); i++) {
+    auto& particle = state.particles[i];
+    timer::update(particle->timer, dt);
+    if (timer::isComplete(particle->timer)) {
+      state.particles.erase(state.particles.begin() + i);
+      i--;
+      continue;
+    }
+    if (!particle->animation->isInitialized()) {
+      sdl2w::AnimationDefinition def =
+          window.getStore().getAnimationDefinition(particle->animName);
+      particle->animation = std::unique_ptr<sdl2w::Animation>(
+          new sdl2w::Animation(def, window.getStore()));
+    }
+    particle->animation->update(dt);
+  }
+
+  checkCollisions(state);
+  r.updateAnimations(dt);
 
   moveSequentialActions(state);
   while (!state.sequentialActions.empty()) {
@@ -84,6 +162,14 @@ void GameManager::render() {
                             state.playAreaHeightTiles * TILE_HEIGHT,
                             {57, 57, 57, 255});
 
+  window.getDraw().drawRect(state.playAreaXOffset,
+                            state.playAreaBottomYStart,
+                            state.playAreaWidthTiles * TILE_WIDTH,
+                            state.playAreaYOffset +
+                                state.playAreaHeightTiles * TILE_HEIGHT -
+                                state.playAreaBottomYStart,
+                            {77, 77, 77, 255});
+
   for (const auto& pair : state.bushes) {
     r.renderBush(*pair.second);
   }
@@ -91,6 +177,16 @@ void GameManager::render() {
   for (const auto& trainHead : state.trainHeads) {
     r.renderTrainFromHead(*trainHead);
   }
+
+  for (const auto& bullet : state.bullets) {
+    r.renderBullet(*bullet);
+  }
+
+  for (const auto& particle : state.particles) {
+    r.renderParticle(*particle);
+  }
+
+  r.renderPlayer(state.player);
 
   for (const auto& soundName : state.soundsToPlay) {
     window.playSound(soundName);

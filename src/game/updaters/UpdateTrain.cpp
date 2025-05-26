@@ -31,9 +31,11 @@ bool isAnotherTrainAtInd(State& state, Train& myTrain, int ind) {
     if (train.get() == &myTrain) {
       continue;
     }
+
     if (getTrainInd(state, *train) == ind) {
       return true;
     }
+
     Train* cart = train->next.get();
     while (cart) {
       if (getTrainInd(state, *cart) == ind) {
@@ -56,7 +58,7 @@ void trainCheckSetHeadRotationOrNext(Train& head, State& state, double nextX) {
       state.playAreaXOffset + state.playAreaWidthTiles * TILE_WIDTH - halfWidth;
   const double lowerBound =
       state.playAreaYOffset + state.playAreaHeightTiles * TILE_HEIGHT;
-  const double upperBound = state.playAreaYOffset;
+  const double upperBound = state.playAreaBottomYStart;
 
   if (head.isPoisoned) {
     head.isRotating = true;
@@ -131,7 +133,7 @@ void updateTrain(Train& head, State& state, int dt) {
         if (head.isPoisoned) {
           const double lowerBound =
               state.playAreaYOffset + state.playAreaHeightTiles * TILE_HEIGHT;
-          const double upperBound = state.playAreaYOffset;
+          const double upperBound = state.playAreaBottomYStart;
           if (head.vDirection == TRAIN_DOWN && head.y + head.h > lowerBound) {
             head.isPoisoned = false;
           } else if (head.vDirection == TRAIN_UP &&
@@ -167,7 +169,7 @@ void updateTrain(Train& head, State& state, int dt) {
         if (head.isPoisoned) {
           const double lowerBound =
               state.playAreaYOffset + state.playAreaHeightTiles * TILE_HEIGHT;
-          const double upperBound = state.playAreaYOffset;
+          const double upperBound = state.playAreaBottomYStart;
           if (head.vDirection == TRAIN_DOWN && head.y + head.h > lowerBound) {
             head.isPoisoned = false;
           } else if (head.vDirection == TRAIN_UP &&
@@ -230,7 +232,7 @@ void updateTrain(Train& head, State& state, int dt) {
         cart->prevY = cart->y;
         const double lowerBound =
             state.playAreaYOffset + state.playAreaHeightTiles * TILE_HEIGHT;
-        const double upperBound = state.playAreaYOffset;
+        const double upperBound = state.playAreaBottomYStart;
         if (cart->vDirection == TRAIN_DOWN && cart->y + cart->h > lowerBound) {
           cart->vDirection = TRAIN_UP;
         } else if (cart->vDirection == TRAIN_UP &&
@@ -238,7 +240,7 @@ void updateTrain(Train& head, State& state, int dt) {
           cart->vDirection = TRAIN_DOWN;
         }
       } else {
-        nextX = prev->hDirection == TRAIN_LEFT ? prev->prevX : prev->prevX;
+        nextX = prev->hDirection == TRAIN_LEFT ? cart->prevX : cart->prevX;
         double t = timer::getPct(cart->rotationTimer);
         double offset = (cart->w / 4.) * std::sin(PI * t) *
                         (cart->hDirection == TRAIN_LEFT ? 1 : -1);

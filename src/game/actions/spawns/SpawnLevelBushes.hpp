@@ -40,6 +40,7 @@ class SpawnLevelBushes : public AbstractAction {
       bush->y =
           yTile * TILE_HEIGHT + localState.playAreaYOffset + TILE_HEIGHT / 2.;
       bush->hp = 4;
+      bush->variant = rand() % 8;
       bush->marked = false;
       localState.bushes[bushInd] = std::unique_ptr<Bush>(bush);
     }
