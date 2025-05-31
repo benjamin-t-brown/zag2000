@@ -116,6 +116,7 @@ struct PlayerControls {
 struct Player {
   Physics physics{.friction = 0.03};
   PlayerControls controls;
+  Timer shootTimer{16};
   double acc = 0.0065;
   int level = 0;
   int score = 0;
@@ -149,6 +150,7 @@ struct State {
   Player player;
 
   ControlState controlState = CONTROL_MENU;
+  int level = 0;
   int playAreaWidthTiles = 0;
   int playAreaHeightTiles = 0;
   int playAreaXOffset = 0;

@@ -15,13 +15,15 @@ constexpr double TILE_SCALE = 1;
 
 Render::Render(sdl2w::Window& windowA) : window(windowA) {}
 
-void Render::setup() { animations.clear(); }
+void Render::setup(State& state) {
+  animations.clear();
+  statePtr = &state;
+}
 
 sdl2w::Animation& Render::getAnim(const std::string& name) {
   if (animations.find(name) == animations.end()) {
     sdl2w::AnimationDefinition def =
         window.getStore().getAnimationDefinition(name);
-    // LOG(INFO) << "Creating animation: " << name << LOG_ENDL;
     animations[name] =
         std::unique_ptr<Animation>(new Animation(def, window.getStore()));
   }
@@ -34,6 +36,10 @@ void Render::updateAnimations(int dt) {
   }
 }
 
+int Render::getSpriteOffsetLevel(int offset) {
+  return (getState().level + offset) % 4;
+}
+
 void Render::renderBush(const Bush& bush) {
   if (bush.hp <= 0) {
     return;
@@ -42,7 +48,7 @@ void Render::renderBush(const Bush& bush) {
   int bushInd = 4 * bush.variant + 4 - bush.hp;
 
   std::stringstream ss;
-  ss << "bush1_" << bushInd;
+  ss << "bush" << getSpriteOffsetLevel(bush.marked ? 1 : 0) << "_" << bushInd;
   window.getDraw().drawSprite(
       //
       window.getStore().getSprite(ss.str()),
@@ -82,7 +88,8 @@ void Render::renderPlayer(const Player& player) {
 
 void Render::renderTrain(const Train& train) {
   std::stringstream ss;
-  ss << (train.isHead ? "train1" : "cart1");
+  ss << (train.isHead ? "train" : "cart");
+  ss << getSpriteOffsetLevel();
   bool flip = false;
 
   if (train.isRotating) {

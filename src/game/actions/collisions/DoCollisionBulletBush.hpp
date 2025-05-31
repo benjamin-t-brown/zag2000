@@ -19,7 +19,6 @@ class DoCollisionBulletBush : public AbstractAction {
     }
     int bushInd = getPlayerAreaIndFromPos(localState, bushPtr->x, bushPtr->y);
     if (localState.bushes.find(bushInd) != localState.bushes.end()) {
-      bushPtr->shouldRemove = true;
       bushPtr->hp -= 1;
       if (bushPtr->hp <= 0) {
         bushPtr->shouldRemove = true;

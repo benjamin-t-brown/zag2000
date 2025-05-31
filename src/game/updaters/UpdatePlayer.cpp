@@ -2,8 +2,8 @@
 #include "client/Keys.hpp"
 #include "game/State.h"
 #include "game/actions/player/PlayerShoot.hpp"
-// #include "game/actions/player/SetPlayerControls.hpp"
 #include "lib/sdl2w/Events.h"
+#include "utils/Timer.hpp"
 
 namespace program {
 void setControlState(State& state, sdl2w::Events& events) {
@@ -52,7 +52,18 @@ void updatePlayer(Player& player, State& state, sdl2w::Events& events, int dt) {
     physics::applyForce(player.physics, 90., ACCELERATION);
   }
 
-  physics::updatePhysics(player.physics, dt);
+  std::vector<physics::Rect> obstacles;
+  for (const auto& bush : state.bushes) {
+    if (!bush.second->shouldRemove) {
+      obstacles.push_back(physics::Rect{
+          static_cast<double>(bush.second->x) - TILE_WIDTH_D / 2.,
+          static_cast<double>(bush.second->y) - TILE_HEIGHT_D / 2.,
+          TILE_WIDTH_D,
+          TILE_HEIGHT_D});
+    }
+  }
+
+  physics::updatePhysics(player.physics, dt, obstacles);
 
   const double tw = TILE_WIDTH;
   const double th = TILE_HEIGHT;
@@ -76,12 +87,14 @@ void updatePlayer(Player& player, State& state, sdl2w::Events& events, int dt) {
                        state.playAreaHeightTiles * TILE_HEIGHT - th / 2;
   }
 
+  timer::update(player.shootTimer, dt);
+
   if (player.canShoot) {
     if (player.controls.shoot) {
       enqueueAction(state, new actions::PlayerShoot(), 0);
     }
   } else {
-    if (state.bullets.size() == 0) {
+    if (state.bullets.size() == 0 && timer::isComplete(player.shootTimer)) {
       // update methods should be able to own their own state
       player.canShoot = true;
     }

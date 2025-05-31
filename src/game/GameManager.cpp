@@ -19,7 +19,7 @@ GameManager::GameManager(sdl2w::Window& windowA)
 GameManager::~GameManager() {}
 
 void GameManager::load() {
-  r.setup();
+  r.setup(state);
   emshelpers::notifyGameReady();
 }
 
@@ -42,10 +42,15 @@ void GameManager::start() {
   // enqueueAction(state, new actions::SpawnBush(std::make_pair(15 - 3, 1)), 0);
   // enqueueAction(state, new actions::SpawnBush(std::make_pair(15 - 3, 2)), 0);
   // enqueueAction(state, new actions::SpawnBush(std::make_pair(15 - 3, 3)), 0);
-  // enqueueAction(state, new actions::SpawnBush(std::make_pair(15 - 3, 4)), 0);
-  enqueueAction(state, new actions::SpawnLevelBushes(), 0);
   enqueueAction(
-      state, new actions::SpawnTrain(std::make_pair(9, 0), 8, 0.25), 0);
+      state, new actions::SpawnBush(std::make_pair(15 - 3, 17 - 3)), 0);
+  enqueueAction(
+      state, new actions::SpawnBush(std::make_pair(15 - 6, 17 - 3)), 0);
+  enqueueAction(
+      state, new actions::SpawnBush(std::make_pair(15 - 10, 17 - 4)), 0);
+  enqueueAction(state, new actions::SpawnLevelBushes(), 0);
+  // enqueueAction(
+  //     state, new actions::SpawnTrain(std::make_pair(9, 0), 8, 0.25), 0);
 
   state.controlState = CONTROL_IN_GAME;
   emshelpers::notifyGameStarted();
@@ -112,6 +117,15 @@ void GameManager::update(int dt) {
           new sdl2w::Animation(def, window.getStore()));
     }
     particle->animation->update(dt);
+  }
+
+  for (auto it = state.bushes.begin(); it != state.bushes.end();) {
+    auto& bush = it->second;
+    if (bush->shouldRemove) {
+      it = state.bushes.erase(it);
+    } else {
+      ++it;
+    }
   }
 
   checkCollisions(state);

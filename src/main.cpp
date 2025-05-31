@@ -17,8 +17,8 @@ void runProgram(int argc, char** argv) {
                        {
                            .mode = sdl2w::DrawMode::GPU,
                            .title = "Zag 2000",
-                           .w = w,
-                           .h = h,
+                           .w = w * 2,
+                           .h = h * 2,
                            .x = 25, // SDL_WINDOWPOS_UNDEFINED
                            .y = 50, // SDL_WINDOWPOS_UNDEFINED
                            .renderW = w,

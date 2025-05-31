@@ -15,6 +15,12 @@ class DoCollisionBulletTrain : public AbstractAction {
   Bullet* bulletPtr;
   Train* trainPtr;
 
+  ParticleType getParticleTypeForRemove() {
+    std::vector<ParticleType> particleTypes = {
+        PARTICLE_EXPL_0, PARTICLE_EXPL_1, PARTICLE_EXPL_2, PARTICLE_EXPL_3};
+    return particleTypes[state->level % 4];
+  }
+
   void act() override {
     State& localState = *this->state;
     if (findBulletByPtr(localState, bulletPtr).has_value()) {
@@ -35,7 +41,8 @@ class DoCollisionBulletTrain : public AbstractAction {
         int y = trainInd / localState.playAreaWidthTiles;
         enqueueAction(
             localState,
-            new SpawnParticle(ParticleType::PARTICLE_EXPL_0, {x, y}, 200), 0);
+            new SpawnParticle(getParticleTypeForRemove(), {x, y}, 200),
+            0);
       }
       if (trainPtr->next) {
         trainPtr->next->isHead = true;

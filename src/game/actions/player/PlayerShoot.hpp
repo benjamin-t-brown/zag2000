@@ -19,6 +19,7 @@ class PlayerShoot : public AbstractAction {
     }
 
     player.canShoot = false;
+    timer::start(player.shootTimer);
     enqueueAction(
         localState,
         new actions::SpawnPlayerBullet(physics::getPos(player.physics)),

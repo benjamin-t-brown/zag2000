@@ -12,16 +12,19 @@ class Window;
 
 namespace program {
 class Render {
+  State* statePtr = nullptr;
   sdl2w::Window& window;
   std::unordered_map<std::string, std::unique_ptr<sdl2w::Animation>> animations;
 
 public:
   Render(sdl2w::Window& windowA);
-  void setup();
+  void setup(State& state);
+  const State& getState() const { return *statePtr; }
 
   sdl2w::Animation& getAnim(const std::string& name);
   void updateAnimations(int dt);
 
+  int getSpriteOffsetLevel(int offset = 0);
   void renderBush(const Bush& bush);
   void renderPlayer(const Player& player);
   void renderTrain(const Train& train);
