@@ -38,6 +38,7 @@ class SpawnTrain : public AbstractAction {
   std::pair<int, int> tilePos;
   int numCarts;
   double speed;
+  TrainDirectionH hDirection;
 
   void act() override {
     State& localState = *this->state;
@@ -45,14 +46,15 @@ class SpawnTrain : public AbstractAction {
     auto [xTile, yTile] = tilePos;
 
     auto head1 = createTrain(localState, xTile, yTile, speed);
+    head1->hDirection = hDirection;
     for (int i = 0; i < numCarts; i++) {
       createCart(head1);
     }
   }
 
 public:
-  SpawnTrain(std::pair<int, int> tilePos, int numCarts, double speed)
-      : tilePos(tilePos), numCarts(numCarts), speed(speed) {}
+  SpawnTrain(std::pair<int, int> tilePos, int numCarts, double speed, TrainDirectionH hDirection = TRAIN_RIGHT)
+      : tilePos(tilePos), numCarts(numCarts), speed(speed), hDirection(hDirection) {}
 };
 
 } // namespace actions

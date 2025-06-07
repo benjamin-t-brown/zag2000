@@ -5,6 +5,7 @@ Sound,bomb_expl,assets/snd/bomb_expl.wav
 Sound,extra_life,assets/snd/extra_life.wav
 Sound,game_over,assets/snd/game_over.wav
 Sound,hit,assets/snd/hit.wav
+Sound,hit2,assets/snd/hit2.wav
 Sound,missile_spawn,assets/snd/missile_spawn.wav
 Sound,missile_speed,assets/snd/missile_speed.wav
 Sound,player_hit,assets/snd/player_hit.wav
@@ -12,6 +13,21 @@ Sound,player_missile,assets/snd/player_missile.wav
 Sound,shoot_bomb,assets/snd/shoot_bomb.wav
 Sound,start_game,assets/snd/start_game.wav
 Music,zag,assets/snd/zag.wav
+
+Pic,bg_lower_gradient,assets/img/bg_lower_gradient.png
+Sprites,bg_lower_gradient,1,25,25
+
+Pic,bg0,assets/img/bg0.png
+Sprites,bg0,10,25,25
+
+Pic,bg1,assets/img/bg1.png
+Sprites,bg1,10,25,25
+
+Pic,bg2,assets/img/bg2.png
+Sprites,bg2,10,25,25
+
+Pic,bg3,assets/img/bg3.png
+Sprites,bg3,10,25,25
 
 Pic,train0,assets/img/train0.png
 Sprites,train0,16,40,33
@@ -320,7 +336,7 @@ EndAnim
 
 Pic,bomber,assets/img/bomber.png
 Sprites,bomber,4,40,33
-Anim,bomber_anim,noloop
+Anim,bomber_anim,loop
 bomber_0 100
 bomber_2 100
 bomber_1 100

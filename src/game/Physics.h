@@ -61,6 +61,11 @@ enum CollisionDirection {
   BOTTOM_LEFT,
   BOTTOM_RIGHT
 };
+double getAngleTowards(std::pair<double, double> p1,
+                       std::pair<double, double> p2);
+double getAngleTowards(std::pair<double, double> p1,
+                       std::pair<double, double> p2);
+double getAngleTowards(const Physics& p1, std::pair<double, double> p2);
 
 std::pair<double, double> getPos(const Physics& physics);
 void applyForce(Physics& physics, double headingDeg, double acc);

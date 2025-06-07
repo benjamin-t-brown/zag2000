@@ -27,9 +27,17 @@ struct Particle {
   std::unique_ptr<sdl2w::Animation> animation;
   Timer timer;
   std::string animName;
+  std::string text;
   int x = 0;
   int y = 0;
   int ms = 0;
+};
+
+struct CollisionCircle : Removable {
+  Timer timer;
+  double x = 0;
+  double y = 0;
+  double radius = 0;
 };
 
 struct Bush : Removable {
@@ -65,18 +73,24 @@ struct Train : Removable {
   bool isPoisoned = false;
 };
 
+
 struct Bomber : Removable {
   Physics physics;
   Timer shootTimer;
+  Heading heading;
+  double speed = .1;
+  int walkX = 0;
+  int walkY = 0;
   int w = TILE_WIDTH;
   int h = TILE_HEIGHT;
-  double speed = .1;
 };
 
 struct Bomb : Removable {
   Timer transformTimer;
   double x = 0;
   double y = 0;
+  double x2 = 0;
+  double y2 = 0;
 };
 
 struct Airplane : Removable {
@@ -118,7 +132,6 @@ struct Player {
   PlayerControls controls;
   Timer shootTimer{16};
   double acc = 0.0065;
-  int level = 0;
   int score = 0;
   int lives = 3;
   int w = TILE_WIDTH;
@@ -129,6 +142,7 @@ struct Player {
 
 enum ControlState {
   CONTROL_MENU,
+  CONTROL_WAITING,
   CONTROL_IN_GAME,
   CONTROL_DEFEATED,
   CONTROL_SHOWING_HIGH_SCORE
@@ -142,11 +156,13 @@ struct State {
   std::vector<std::unique_ptr<Bomb>> bombs;
   std::vector<std::unique_ptr<Airplane>> airplanes;
   std::vector<std::unique_ptr<DuoMissile>> duoMissiles;
+  std::vector<std::unique_ptr<CollisionCircle>> collisionCircles;
   std::vector<std::unique_ptr<Particle>> particles;
   std::vector<std::unique_ptr<actions::AsyncAction>> sequentialActions;
   std::vector<std::unique_ptr<actions::AsyncAction>> sequentialActionsNext;
   std::vector<std::unique_ptr<actions::AsyncAction>> parallelActions;
   std::vector<std::string> soundsToPlay;
+  std::vector<int> bg;
   Player player;
 
   ControlState controlState = CONTROL_MENU;
@@ -156,7 +172,7 @@ struct State {
   int playAreaXOffset = 0;
   int playAreaYOffset = 0;
   int playAreaBottomYStart = 0;
-  int score = 0;
+  bool controlIsWaitingForGameOver = false;
 };
 
 inline void
@@ -166,6 +182,10 @@ enqueueAction(State& state, actions::AbstractAction* action, int ms) {
                                Timer{static_cast<double>(ms), 0}};
   state.sequentialActionsNext.push_back(
       std::unique_ptr<actions::AsyncAction>(actionPtr));
+  if (actionPtr->action) {
+    LOG(INFO) << "Enqueued action: " << actionPtr->action->getName() << " for "
+              << ms << "ms" << LOG_ENDL;
+  }
 }
 
 inline void addParallelAction(State& state,
@@ -205,8 +225,7 @@ inline std::optional<Train*> findTrainByPtr(State& state, Train* trainPtr) {
       nextTrain = nextTrain->next.get();
     }
   }
-  LOG(WARN) << "Train not found by pointer: " << trainPtr
-            << LOG_ENDL;
+  LOG(WARN) << "Train not found by pointer: " << trainPtr << LOG_ENDL;
   return std::nullopt;
 }
 

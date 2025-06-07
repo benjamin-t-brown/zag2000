@@ -1,12 +1,19 @@
 #include "GameManager.h"
 #include "State.h"
+#include "actions/collisions/DoCollisionPlayerTrain.hpp"
+#include "actions/control/SetControlState.hpp"
+#include "actions/level/StartNextLevel.hpp"
+#include "actions/spawns/SpawnBomber.hpp"
 #include "actions/spawns/SpawnBush.hpp"
 #include "actions/spawns/SpawnLevelBushes.hpp"
 #include "actions/spawns/SpawnTrain.hpp"
 #include "client/Keys.hpp"
+#include "game/actions/spawns/SpawnTrain.hpp"
 #include "lib/sdl2w/EmscriptenHelpers.h"
 #include "lib/sdl2w/Window.h"
 #include "updaters/CheckCollisions.h"
+#include "updaters/CheckGameFlow.h"
+#include "updaters/UpdateBomber.h"
 #include "updaters/UpdateBullet.h"
 #include "updaters/UpdatePlayer.h"
 #include "updaters/UpdateTrain.h"
@@ -25,12 +32,14 @@ void GameManager::load() {
 
 void GameManager::start() {
   auto [renderWidth, renderHeight] = window.getDraw().getRenderSize();
-  state.playAreaWidthTiles = 15;
-  state.playAreaHeightTiles = 17;
+  state.playAreaWidthTiles = renderWidth / TILE_WIDTH;
+  state.playAreaHeightTiles = renderHeight / TILE_HEIGHT - 1;
   state.playAreaXOffset =
       renderWidth / 2 - state.playAreaWidthTiles * TILE_WIDTH / 2;
-  state.playAreaYOffset =
-      renderHeight / 2 - state.playAreaHeightTiles * TILE_HEIGHT / 2;
+  state.playAreaYOffset = TILE_HEIGHT;
+  // state.playAreaYOffset = renderHeight / 2 -
+  //                         state.playAreaHeightTiles * TILE_HEIGHT / 2 +
+  //                         TILE_HEIGHT / 2;
   state.playAreaBottomYStart =
       (state.playAreaHeightTiles - 5) * TILE_HEIGHT + state.playAreaYOffset;
 
@@ -39,30 +48,41 @@ void GameManager::start() {
   state.player.physics.y =
       state.playAreaBottomYStart + TILE_HEIGHT * 2 + TILE_HEIGHT / 2.;
 
+  for (int i = 0; i < state.playAreaWidthTiles; i++) {
+    for (int j = 0; j < state.playAreaHeightTiles; j++) {
+      state.bg.push_back(rand() % 10);
+    }
+  }
+
   // enqueueAction(state, new actions::SpawnBush(std::make_pair(15 - 3, 1)), 0);
   // enqueueAction(state, new actions::SpawnBush(std::make_pair(15 - 3, 2)), 0);
   // enqueueAction(state, new actions::SpawnBush(std::make_pair(15 - 3, 3)), 0);
+  enqueueAction(state, new actions::StartNextLevel(1), 0);
   enqueueAction(
-      state, new actions::SpawnBush(std::make_pair(15 - 3, 17 - 3)), 0);
-  enqueueAction(
-      state, new actions::SpawnBush(std::make_pair(15 - 6, 17 - 3)), 0);
-  enqueueAction(
-      state, new actions::SpawnBush(std::make_pair(15 - 10, 17 - 4)), 0);
-  enqueueAction(state, new actions::SpawnLevelBushes(), 0);
-  // enqueueAction(
-  //     state, new actions::SpawnTrain(std::make_pair(9, 0), 8, 0.25), 0);
+      state,
+      new actions::SpawnTrain(std::make_pair(0, state.playAreaHeightTiles - 3),
+                              5,
+                              0.21,
+                              TRAIN_RIGHT),
+      0);
+  enqueueAction(state, new actions::SpawnBomber(false), 0);
 
-  state.controlState = CONTROL_IN_GAME;
+  state.controlState = CONTROL_WAITING;
   emshelpers::notifyGameStarted();
 }
 
 void GameManager::handleKeyPress(const std::string& key) {
-  LOG(INFO) << "Key pressed: " << key << LOG_ENDL;
+  // LOG(INFO) << "Key pressed: " << key << LOG_ENDL;
   if (state.controlState == CONTROL_MENU) {
     if (isConfirmKey(key)) {
       start();
     }
   } else if (state.controlState == CONTROL_IN_GAME) {
+  } else if (state.controlState == CONTROL_SHOWING_HIGH_SCORE) {
+    enqueueAction(state, new actions::SetControlState(CONTROL_MENU), 0);
+  }
+  if (key == "T") {
+    enqueueAction(state, new actions::DoCollisionPlayerTrain(nullptr), 0);
   }
 }
 
@@ -71,35 +91,69 @@ void GameManager::handleKeyRelease(const std::string& key) {}
 void GameManager::update(int dt) {
   updatePlayer(state.player, state, window.getEvents(), dt);
 
-  for (int i = 0; i < static_cast<int>(state.trainHeads.size()); i++) {
-    auto& trainHead = state.trainHeads[i];
-    updateTrain(*trainHead, state, dt);
+  if (state.controlState == CONTROL_IN_GAME) {
+    for (int i = 0; i < static_cast<int>(state.trainHeads.size()); i++) {
+      auto& trainHead = state.trainHeads[i];
+      updateTrain(*trainHead, state, dt);
 
-    Train* prevTrain = trainHead.get();
-    Train* nextTrain = trainHead->next.get();
-    while (nextTrain) {
-      if (nextTrain->shouldRemove) {
-        prevTrain->next = nullptr;
+      Train* prevTrain = trainHead.get();
+      Train* nextTrain = trainHead->next.get();
+      while (nextTrain) {
+        if (nextTrain->shouldRemove) {
+          prevTrain->next = nullptr;
+        }
+        prevTrain = nextTrain;
+        nextTrain = nextTrain->next.get();
       }
-      prevTrain = nextTrain;
-      nextTrain = nextTrain->next.get();
+
+      if (trainHead->shouldRemove) {
+        state.trainHeads.erase(state.trainHeads.begin() + i);
+        i--;
+        continue;
+      }
     }
 
-    if (trainHead->shouldRemove) {
-      state.trainHeads.erase(state.trainHeads.begin() + i);
-      i--;
-      continue;
+    for (int i = 0; i < static_cast<int>(state.bombers.size()); i++) {
+      auto& bomber = *state.bombers[i];
+      updateBomber(bomber, state, dt);
+      if (bomber.shouldRemove) {
+        state.bombers.erase(state.bombers.begin() + i);
+        i--;
+        continue;
+      }
     }
-  }
 
-  for (int i = 0; i < static_cast<int>(state.bullets.size()); i++) {
-    auto& bullet = state.bullets[i];
-    updateBullet(*bullet, state, dt);
-    if (bullet->shouldRemove) {
-      state.bullets.erase(state.bullets.begin() + i);
-      i--;
-      continue;
+    for (int i = 0; i < static_cast<int>(state.bombs.size()); i++) {
+      auto& bomb = *state.bombs[i];
+      updateBomb(bomb, state, dt);
+      if (bomb.shouldRemove) {
+        state.bombs.erase(state.bombs.begin() + i);
+        i--;
+        continue;
+      }
     }
+
+    for (int i = 0; i < static_cast<int>(state.bullets.size()); i++) {
+      auto& bullet = state.bullets[i];
+      updateBullet(*bullet, state, dt);
+      if (bullet->shouldRemove) {
+        state.bullets.erase(state.bullets.begin() + i);
+        i--;
+        continue;
+      }
+    }
+
+    for (auto it = state.bushes.begin(); it != state.bushes.end();) {
+      auto& bush = it->second;
+      if (bush->shouldRemove) {
+        it = state.bushes.erase(it);
+      } else {
+        ++it;
+      }
+    }
+
+    checkCollisions(state);
+    checkGameFlow(state, dt);
   }
 
   for (int i = 0; i < static_cast<int>(state.particles.size()); i++) {
@@ -110,25 +164,28 @@ void GameManager::update(int dt) {
       i--;
       continue;
     }
-    if (!particle->animation->isInitialized()) {
+    if (particle->animation != nullptr &&
+        !particle->animation->isInitialized()) {
       sdl2w::AnimationDefinition def =
           window.getStore().getAnimationDefinition(particle->animName);
       particle->animation = std::unique_ptr<sdl2w::Animation>(
           new sdl2w::Animation(def, window.getStore()));
     }
-    particle->animation->update(dt);
-  }
-
-  for (auto it = state.bushes.begin(); it != state.bushes.end();) {
-    auto& bush = it->second;
-    if (bush->shouldRemove) {
-      it = state.bushes.erase(it);
-    } else {
-      ++it;
+    if (particle->animation != nullptr) {
+      particle->animation->update(dt);
     }
   }
 
-  checkCollisions(state);
+  for (int i = 0; i < static_cast<int>(state.collisionCircles.size()); i++) {
+    auto& circle = state.collisionCircles[i];
+    timer::update(circle->timer, dt);
+    if (timer::isComplete(circle->timer)) {
+      state.collisionCircles.erase(state.collisionCircles.begin() + i);
+      i--;
+      continue;
+    }
+  }
+
   r.updateAnimations(dt);
 
   moveSequentialActions(state);
@@ -184,12 +241,22 @@ void GameManager::render() {
                                 state.playAreaBottomYStart,
                             {77, 77, 77, 255});
 
+  r.renderBg();
+
   for (const auto& pair : state.bushes) {
     r.renderBush(*pair.second);
   }
 
   for (const auto& trainHead : state.trainHeads) {
     r.renderTrainFromHead(*trainHead);
+  }
+
+  for (const auto& bomber : state.bombers) {
+    r.renderBomber(*bomber);
+  }
+
+  for (const auto& bomb : state.bombs) {
+    r.renderBomb(*bomb);
   }
 
   for (const auto& bullet : state.bullets) {
@@ -200,7 +267,13 @@ void GameManager::render() {
     r.renderParticle(*particle);
   }
 
+  for (const auto& circle : state.collisionCircles) {
+    r.renderCollisionCircle(*circle);
+  }
+
   r.renderPlayer(state.player);
+
+  r.renderUi();
 
   for (const auto& soundName : state.soundsToPlay) {
     window.playSound(soundName);

@@ -2,21 +2,23 @@
 
 #include "game/State.h"
 #include "game/actions/AbstractAction.h"
+#include <cstdlib>
 
 namespace program {
 
 namespace actions {
 
-class SetPlayerControls : public AbstractAction {
-  PlayerControls pc;
+class PlaySound : public AbstractAction {
+  std::string soundName;
 
   void act() override {
     State& localState = *this->state;
-    localState.player.controls = pc;
+
+    localState.soundsToPlay.push_back(soundName);
   }
 
 public:
-  SetPlayerControls(PlayerControls& pc) : pc(pc) {}
+  PlaySound(std::string_view soundName) : soundName(soundName) {}
 };
 
 } // namespace actions

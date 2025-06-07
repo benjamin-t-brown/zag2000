@@ -5,7 +5,7 @@
       "name": "(gdb) Launch",
       "type": "cppdbg",
       "request": "launch",
-      "program": "${workspaceFolder}\\src\\ZAG2000",
+      "program": "${workspaceFolder}\\src\\TESTUI",
       "args": [],
       "stopAtEntry": false,
       "cwd": "${workspaceFolder}\\src",

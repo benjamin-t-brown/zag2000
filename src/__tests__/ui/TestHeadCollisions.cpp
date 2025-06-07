@@ -511,7 +511,7 @@ int main(int argc, char** argv) {
   //     [&](const std::string& key, int) { game.handleKeyPress(key); });
 
   Render gameRenderer(window);
-  gameRenderer.setup();
+  gameRenderer.setup(state);
 
   auto head1 = createTrain(state, 3, 0);
   for (int i = 0; i < 5; i++) {

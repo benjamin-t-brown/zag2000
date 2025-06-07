@@ -37,6 +37,10 @@ void setControlState(State& state, sdl2w::Events& events) {
 }
 
 void updatePlayer(Player& player, State& state, sdl2w::Events& events, int dt) {
+  if (player.dead || state.controlState != CONTROL_IN_GAME) {
+    return;
+  }
+
   const double ACCELERATION = player.acc;
 
   setControlState(state, events);

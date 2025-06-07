@@ -4,6 +4,7 @@
 #include "game/actions/AbstractAction.h"
 #include "game/actions/spawns/SpawnBush.hpp"
 #include "game/actions/spawns/SpawnParticle.hpp"
+#include "game/actions/ui/PlaySound.hpp"
 #include "game/updaters/UpdateTrain.h"
 #include <utility>
 
@@ -14,12 +15,6 @@ namespace actions {
 class DoCollisionBulletTrain : public AbstractAction {
   Bullet* bulletPtr;
   Train* trainPtr;
-
-  ParticleType getParticleTypeForRemove() {
-    std::vector<ParticleType> particleTypes = {
-        PARTICLE_EXPL_0, PARTICLE_EXPL_1, PARTICLE_EXPL_2, PARTICLE_EXPL_3};
-    return particleTypes[state->level % 4];
-  }
 
   void act() override {
     State& localState = *this->state;
@@ -33,16 +28,22 @@ class DoCollisionBulletTrain : public AbstractAction {
       if (ind > 0) {
         int x = ind % localState.playAreaWidthTiles;
         int y = ind / localState.playAreaWidthTiles;
-        enqueueAction(localState, new SpawnBush(std::make_pair(x, y)), 0);
+        // dont allow bushes on bottom row
+        if (y < localState.playAreaHeightTiles - 1) {
+          enqueueAction(localState, new SpawnBush(std::make_pair(x, y)), 0);
+        }
       }
       int trainInd = getTrainInd(localState, *trainPtr);
       if (trainInd > 0) {
         int x = trainInd % localState.playAreaWidthTiles;
         int y = trainInd / localState.playAreaWidthTiles;
-        enqueueAction(
-            localState,
-            new SpawnParticle(getParticleTypeForRemove(), {x, y}, 200),
-            0);
+        enqueueAction(localState,
+                      new SpawnParticle(SpawnParticle::getParticleTypeForRemove(
+                                            localState.level),
+                                        {x, y},
+                                        200),
+                      0);
+        enqueueAction(localState, new PlaySound("hit"), 0);
       }
       if (trainPtr->next) {
         trainPtr->next->isHead = true;
@@ -50,7 +51,11 @@ class DoCollisionBulletTrain : public AbstractAction {
         trainPtr->next = nullptr;
       }
 
-      localState.score += 10;
+      if (trainPtr->isHead) {
+        localState.player.score += 25;
+      } else {
+        localState.player.score += 15;
+      }
     }
   }
 

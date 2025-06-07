@@ -11,6 +11,8 @@ game/updaters/CheckCollisions.cpp\
 game/updaters/UpdatePlayer.cpp\
 game/updaters/UpdateTrain.cpp\
 game/updaters/UpdateBullet.cpp\
+game/updaters/CheckGameFlow.cpp\
+game/updaters/UpdateBomber.cpp\
 
 LIB_CODE=\
 lib/hiscore/hiscore.cpp

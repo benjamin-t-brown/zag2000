@@ -22,7 +22,7 @@ class DoCollisionBulletBush : public AbstractAction {
       bushPtr->hp -= 1;
       if (bushPtr->hp <= 0) {
         bushPtr->shouldRemove = true;
-        localState.score += 10;
+        localState.player.score += 10;
       }
     }
   }

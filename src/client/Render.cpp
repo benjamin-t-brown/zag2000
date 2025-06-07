@@ -1,7 +1,11 @@
 #include "Render.h"
+#include "game/State.h"
 #include "lib/sdl2w/Animation.h"
 #include "lib/sdl2w/Draw.h"
+#include "lib/sdl2w/L10n.h"
 #include "lib/sdl2w/Window.h"
+#include "utils/Timer.hpp"
+#include <cmath>
 #include <memory>
 #include <sstream>
 
@@ -38,6 +42,36 @@ void Render::updateAnimations(int dt) {
 
 int Render::getSpriteOffsetLevel(int offset) {
   return (getState().level + offset) % 4;
+}
+
+void Render::renderBg() {
+  const State& state = *statePtr;
+  sdl2w::Draw& d = window.getDraw();
+  auto [renderW, _] = d.getRenderSize();
+
+  for (int i = 0; i < state.playAreaWidthTiles; i++) {
+    for (int j = 0; j < state.playAreaHeightTiles; j++) {
+      int bgInd = state.bg[j * state.playAreaWidthTiles + i];
+      std::stringstream ss;
+      ss << "bg" << getSpriteOffsetLevel() << "_" << bgInd;
+      d.drawSprite(
+          //
+          window.getStore().getSprite(ss.str()),
+          RenderableParams{
+              //
+              .scale = {TILE_SCALE, TILE_SCALE},
+              .x = state.playAreaXOffset + i * TILE_WIDTH + TILE_WIDTH / 2,
+              .y = state.playAreaYOffset + j * TILE_HEIGHT + TILE_WIDTH / 2});
+    }
+  }
+
+  d.drawSprite(
+      window.getStore().getSprite("bg_lower_gradient_0"),
+      RenderableParams{
+          .scale = {state.playAreaWidthTiles + 1, 5},
+          .x = state.playAreaXOffset + renderW / 2 - TILE_WIDTH / 2,
+          .y = state.playAreaYOffset + state.playAreaHeightTiles * TILE_HEIGHT,
+      });
 }
 
 void Render::renderBush(const Bush& bush) {
@@ -177,14 +211,62 @@ void Render::renderBullet(const Bullet& bullet) {
                             {255, 255, 255, 255});
 }
 
-void Render::renderBomber(const Bomber& bomber) {}
+void Render::renderBomber(const Bomber& bomber) {
+  Animation& anim = getAnim("bomber_anim");
+  window.getDraw().drawAnimation(
+      //
+      anim,
+      RenderableParamsEx{
+          //
+          .scale = {TILE_SCALE, TILE_SCALE},
+          .x = static_cast<int>(bomber.physics.x),
+          .y = static_cast<int>(bomber.physics.y),
+          .flipped = false,
+      });
+}
+
+void Render::renderBomb(const Bomb& bomb) {
+  double pct = timer::getPct(bomb.transformTimer);
+  int x = pct * (bomb.x2 - bomb.x) + bomb.x;
+  int y = pct * (bomb.y2 - bomb.y) + bomb.y;
+
+  y -= (TILE_HEIGHT * 2) * std::sin(timer::getPct(bomb.transformTimer) * M_PI);
+
+  {
+    Animation& anim = getAnim("bomb_anim");
+    window.getDraw().drawAnimation(
+        //
+        anim,
+        RenderableParamsEx{
+            //
+            .scale = {TILE_SCALE, TILE_SCALE},
+            .x = x,
+            .y = y,
+            .flipped = false,
+        });
+  }
+
+  {
+    Animation& anim = getAnim("bomb_target");
+    window.getDraw().drawAnimation(
+        //
+        anim,
+        RenderableParamsEx{
+            //
+            .scale = {TILE_SCALE, TILE_SCALE},
+            .x = static_cast<int>(bomb.x2),
+            .y = static_cast<int>(bomb.y2),
+            .flipped = false,
+        });
+  }
+}
 
 void Render::renderAirplane(const Airplane& plane) {}
 
 void Render::renderDuoMissile(const DuoMissile& missile) {}
 
 void Render::renderParticle(const Particle& particle) {
-  if (particle.animation->isInitialized()) {
+  if (particle.animation != nullptr && particle.animation->isInitialized()) {
     window.getDraw().drawAnimation(
         //
         *particle.animation,
@@ -194,7 +276,90 @@ void Render::renderParticle(const Particle& particle) {
             .x = particle.x,
             .y = particle.y,
         });
+  } else if (!particle.text.empty()) {
+    window.getDraw().drawText(particle.text,
+                              sdl2w::RenderTextParams{
+                                  .fontName = "default",
+                                  .fontSize = sdl2w::TextSize::TEXT_SIZE_20,
+                                  .x = particle.x,
+                                  .y = particle.y,
+                                  .color = {255, 255, 255, 255},
+                                  .centered = true,
+                              });
   }
+}
+
+void Render::renderCollisionCircle(const CollisionCircle& circle) {
+  sdl2w::Draw& d = window.getDraw();
+  d.drawCircle(static_cast<int>(circle.x),
+               static_cast<int>(circle.y),
+               circle.radius,
+               {255, 0, 0, 100},
+               false);
+}
+
+void Render::renderUi() {
+  const State& state = *statePtr;
+  sdl2w::Draw& d = window.getDraw();
+  auto [renderW, renderH] = d.getRenderSize();
+
+  if (state.controlState == CONTROL_MENU) {
+    d.drawText(TRANSLATE("Press button to start"),
+               sdl2w::RenderTextParams{
+                   .fontName = "default",
+                   .fontSize = sdl2w::TextSize::TEXT_SIZE_20,
+                   .x = renderW / 2,
+                   .y = renderH / 2,
+                   .color = {255, 255, 255, 255},
+                   .centered = true,
+               });
+    return;
+  } else if (state.controlState == CONTROL_SHOWING_HIGH_SCORE) {
+    d.drawRect(0, 0, renderW, TILE_HEIGHT, {77, 57, 57, 255});
+    d.drawText(TRANSLATE("High Score") + ": " +
+                   std::to_string(state.player.score),
+               sdl2w::RenderTextParams{
+                   .fontName = "default",
+                   .fontSize = sdl2w::TextSize::TEXT_SIZE_24,
+                   .x = renderW / 2,
+                   .y = renderH / 2,
+                   .color = {255, 255, 255, 255},
+                   .centered = true,
+               });
+    return;
+  }
+
+  d.drawRect(0, 0, renderW, TILE_HEIGHT, {77, 57, 57, 255});
+
+  d.drawText(TRANSLATE("Lives") + ": " + std::to_string(state.player.lives),
+             sdl2w::RenderTextParams{
+                 .fontName = "default",
+                 .fontSize = sdl2w::TextSize::TEXT_SIZE_20,
+                 .x = 2,
+                 .y = 0,
+                 .color = {255, 255, 255, 255},
+                 .centered = false,
+             });
+
+  d.drawText(TRANSLATE("Score") + ": " + std::to_string(state.player.score),
+             sdl2w::RenderTextParams{
+                 .fontName = "default",
+                 .fontSize = sdl2w::TextSize::TEXT_SIZE_20,
+                 .x = renderW / 2,
+                 .y = 12,
+                 .color = {255, 255, 255, 255},
+                 .centered = true,
+             });
+
+  d.drawText(TRANSLATE("Level") + ": " + std::to_string(state.level),
+             sdl2w::RenderTextParams{
+                 .fontName = "default",
+                 .fontSize = sdl2w::TextSize::TEXT_SIZE_20,
+                 .x = renderW - 100,
+                 .y = 0,
+                 .color = {255, 255, 255, 255},
+                 .centered = false,
+             });
 }
 
 } // namespace program

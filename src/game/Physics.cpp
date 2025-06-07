@@ -12,6 +12,45 @@ Circle::Circle(double xA, double yA, double rA) : x(xA), y(yA), r(rA) {}
 
 Rect::Rect(double xA, double yA, double wA, double hA)
     : x(xA), y(yA), w(wA), h(hA) {}
+
+double getAngleTowards(std::pair<double, double> p1,
+                       std::pair<double, double> p2) {
+  const double x1 = p1.first;
+  const double y1 = p1.second;
+  const double x2 = p2.first;
+  const double y2 = p2.second;
+  const double lenY = y2 - y1;
+  const double dx = x1 - x2;
+  const double dy = y1 - y2;
+  const double hyp = std::sqrt(dx * dx + dy * dy);
+  double ret = 0.;
+  if (y2 >= y1 && x2 >= x1) {
+    ret = (std::asin(lenY / hyp) * 180.) / PI + 90.;
+  } else if (y2 >= y1 && x2 < x1) {
+    ret = (std::asin(lenY / -hyp) * 180.) / PI - 90.;
+  } else if (y2 < y1 && x2 > x1) {
+    ret = (std::asin(lenY / hyp) * 180.) / PI + 90.;
+  } else {
+    ret = (std::asin(-lenY / hyp) * 180.) / PI - 90.;
+  }
+  if (ret >= 360) {
+    ret = 360. - ret;
+  }
+  if (ret < 0) {
+    ret = 360. + ret;
+  }
+  return ret;
+}
+
+double getAngleTowards(const Physics& p1, std::pair<double, double> p2) {
+  return getAngleTowards(std::make_pair(p1.x, p1.y), p2);
+}
+
+double getAngleTowards(const Physics& p1, const Physics& p2) {
+  return getAngleTowards(std::make_pair(p1.x, p2.y),
+                         std::make_pair(p2.x, p2.y));
+}
+
 double degreesToRadians(double degrees) { return (degrees * PI) / 180.0; };
 double radiansToDegrees(double radians) { return (radians * 180.) / PI; };
 
