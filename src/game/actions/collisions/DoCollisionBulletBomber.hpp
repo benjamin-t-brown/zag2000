@@ -3,6 +3,7 @@
 #include "game/State.h"
 #include "game/actions/AbstractAction.h"
 #include "game/actions/spawns/SpawnParticle.hpp"
+#include "game/actions/ui/PlaySound.hpp"
 #include <cmath>
 
 namespace program {
@@ -44,6 +45,7 @@ class DoCollisionBulletBomber : public AbstractAction {
                                                bomberPtr->physics.y,
                                                1000),
                     0);
+      enqueueAction(localState, new PlaySound("hit"), 0);
 
       localState.player.score += score;
     }

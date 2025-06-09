@@ -53,8 +53,18 @@ class SpawnTrain : public AbstractAction {
   }
 
 public:
-  SpawnTrain(std::pair<int, int> tilePos, int numCarts, double speed, TrainDirectionH hDirection = TRAIN_RIGHT)
-      : tilePos(tilePos), numCarts(numCarts), speed(speed), hDirection(hDirection) {}
+  static void setAdditionalTrainSpawnTimer(State& state) {
+    timer::start(state.additionalTrainSpawnTimer, 14000);
+  }
+
+  SpawnTrain(std::pair<int, int> tilePos,
+             int numCarts,
+             double speed,
+             TrainDirectionH hDirection = TRAIN_RIGHT)
+      : tilePos(tilePos),
+        numCarts(numCarts),
+        speed(speed),
+        hDirection(hDirection) {}
 };
 
 } // namespace actions

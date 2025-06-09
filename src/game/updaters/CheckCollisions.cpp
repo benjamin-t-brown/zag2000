@@ -1,8 +1,11 @@
 #include "CheckCollisions.h"
 #include "game/State.h"
+#include "game/actions/collisions/DoCollisionBulletAirplane.hpp"
 #include "game/actions/collisions/DoCollisionBulletBomber.hpp"
 #include "game/actions/collisions/DoCollisionBulletBush.hpp"
 #include "game/actions/collisions/DoCollisionBulletTrain.hpp"
+#include "game/actions/collisions/DoCollisionBushAirplane.hpp"
+#include "game/actions/collisions/DoCollisionBushCollisionCircle.hpp"
 #include "game/actions/collisions/DoCollisionPlayerBomber.hpp"
 #include "game/actions/collisions/DoCollisionPlayerCollisionCircle.hpp"
 #include "game/actions/collisions/DoCollisionPlayerTrain.hpp"
@@ -75,6 +78,22 @@ void checkCollisionBulletTrain(State& state, Bullet& bullet, Train& train) {
   }
 }
 
+void checkCollisionBulletAirplane(State& state,
+                                  Bullet& bullet,
+                                  Airplane& airplane) {
+  if (collidesWithRect(bullet.physics.x,
+                       bullet.physics.y,
+                       bullet.w,
+                       bullet.h,
+                       airplane.x,
+                       airplane.y,
+                       airplane.w,
+                       airplane.h)) {
+    enqueueAction(
+        state, new actions::DoCollisionBulletAirplane(&bullet, &airplane), 0);
+  }
+}
+
 void checkCollisionPlayerTrain(State& state, Player& player, Train& train) {
   if (collidesWithRect(player.physics.x,
                        player.physics.y,
@@ -112,6 +131,32 @@ void checkCollisionPlayerCollisionCircle(State& state,
                          circle.y,
                          circle.radius)) {
     enqueueAction(state, new actions::DoCollisionPlayerCollisionCircle(), 0);
+  }
+}
+
+void checkCollisionBushCollisionCircle(State& state,
+                                       Bush& bush,
+                                       CollisionCircle& circle) {
+  if (collidesRectCircle(bush.x,
+                         bush.y,
+                         TILE_WIDTH_D,
+                         TILE_HEIGHT_D,
+                         circle.x,
+                         circle.y,
+                         circle.radius)) {
+    enqueueAction(state, new actions::DoCollisionBushCollisionCircle(&bush), 0);
+  }
+}
+
+void checkCollisionBushAirplane(State& state, Bush& bush, Airplane& airplane) {
+  if (collidesRectCircle(bush.x,
+                         bush.y,
+                         TILE_WIDTH_D,
+                         TILE_HEIGHT_D,
+                         airplane.x,
+                         airplane.y,
+                         airplane.w / 3.)) {
+    enqueueAction(state, new actions::DoCollisionBushAirplane(&bush), 0);
   }
 }
 
@@ -156,6 +201,13 @@ void checkCollisions(State& state) {
             0);
       }
     }
+
+    for (auto& airplane : state.airplanes) {
+      if (airplane->shouldRemove) {
+        continue;
+      }
+      checkCollisionBulletAirplane(state, *bullet, *airplane);
+    }
   }
 
   for (auto& trainHead : state.trainHeads) {
@@ -173,7 +225,18 @@ void checkCollisions(State& state) {
       }
     }
   }
-
+  for (auto& airplane : state.airplanes) {
+    if (airplane->shouldRemove) {
+      continue;
+    }
+    for (auto& pair : state.bushes) {
+      auto& bush = *pair.second;
+      if (bush.hp <= 0) {
+        continue;
+      }
+      checkCollisionBushAirplane(state, bush, *airplane);
+    }
+  }
   for (auto& bomber : state.bombers) {
     checkCollisionPlayerBomber(state, state.player, *bomber);
     if (state.player.dead) {
@@ -181,6 +244,14 @@ void checkCollisions(State& state) {
     }
   }
   for (auto& circle : state.collisionCircles) {
+    for (auto& pair : state.bushes) {
+      auto& bush = *pair.second;
+      if (bush.hp <= 0) {
+        continue;
+      }
+      checkCollisionBushCollisionCircle(state, bush, *circle);
+    }
+
     checkCollisionPlayerCollisionCircle(state, state.player, *circle);
     if (state.player.dead) {
       return;

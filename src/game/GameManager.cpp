@@ -2,10 +2,9 @@
 #include "State.h"
 #include "actions/collisions/DoCollisionPlayerTrain.hpp"
 #include "actions/control/SetControlState.hpp"
+#include "actions/level/StartGame.hpp"
 #include "actions/level/StartNextLevel.hpp"
 #include "actions/spawns/SpawnBomber.hpp"
-#include "actions/spawns/SpawnBush.hpp"
-#include "actions/spawns/SpawnLevelBushes.hpp"
 #include "actions/spawns/SpawnTrain.hpp"
 #include "client/Keys.hpp"
 #include "game/actions/spawns/SpawnTrain.hpp"
@@ -13,8 +12,7 @@
 #include "lib/sdl2w/Window.h"
 #include "updaters/CheckCollisions.h"
 #include "updaters/CheckGameFlow.h"
-#include "updaters/UpdateBomber.h"
-#include "updaters/UpdateBullet.h"
+#include "updaters/UpdateEntities.h"
 #include "updaters/UpdatePlayer.h"
 #include "updaters/UpdateTrain.h"
 #include "utils/Timer.hpp"
@@ -33,13 +31,10 @@ void GameManager::load() {
 void GameManager::start() {
   auto [renderWidth, renderHeight] = window.getDraw().getRenderSize();
   state.playAreaWidthTiles = renderWidth / TILE_WIDTH;
-  state.playAreaHeightTiles = renderHeight / TILE_HEIGHT - 1;
+  state.playAreaHeightTiles = renderHeight / TILE_HEIGHT - 1 + 1;
   state.playAreaXOffset =
       renderWidth / 2 - state.playAreaWidthTiles * TILE_WIDTH / 2;
-  state.playAreaYOffset = TILE_HEIGHT;
-  // state.playAreaYOffset = renderHeight / 2 -
-  //                         state.playAreaHeightTiles * TILE_HEIGHT / 2 +
-  //                         TILE_HEIGHT / 2;
+  state.playAreaYOffset = 0;
   state.playAreaBottomYStart =
       (state.playAreaHeightTiles - 5) * TILE_HEIGHT + state.playAreaYOffset;
 
@@ -57,15 +52,17 @@ void GameManager::start() {
   // enqueueAction(state, new actions::SpawnBush(std::make_pair(15 - 3, 1)), 0);
   // enqueueAction(state, new actions::SpawnBush(std::make_pair(15 - 3, 2)), 0);
   // enqueueAction(state, new actions::SpawnBush(std::make_pair(15 - 3, 3)), 0);
-  enqueueAction(state, new actions::StartNextLevel(1), 0);
-  enqueueAction(
-      state,
-      new actions::SpawnTrain(std::make_pair(0, state.playAreaHeightTiles - 3),
-                              5,
-                              0.21,
-                              TRAIN_RIGHT),
-      0);
-  enqueueAction(state, new actions::SpawnBomber(false), 0);
+  // enqueueAction(state, new actions::StartNextLevel(1), 0);
+  // enqueueAction(
+  //     state,
+  //     new actions::SpawnTrain(std::make_pair(0, state.playAreaHeightTiles -
+  //     3),
+  //                             5,
+  //                             0.21,
+  //                             TRAIN_RIGHT),
+  //     0);
+  // enqueueAction(state, new actions::SpawnBomber(false), 0);
+  enqueueAction(state, new actions::StartGame(), 0);
 
   state.controlState = CONTROL_WAITING;
   emshelpers::notifyGameStarted();
@@ -80,9 +77,6 @@ void GameManager::handleKeyPress(const std::string& key) {
   } else if (state.controlState == CONTROL_IN_GAME) {
   } else if (state.controlState == CONTROL_SHOWING_HIGH_SCORE) {
     enqueueAction(state, new actions::SetControlState(CONTROL_MENU), 0);
-  }
-  if (key == "T") {
-    enqueueAction(state, new actions::DoCollisionPlayerTrain(nullptr), 0);
   }
 }
 
@@ -143,6 +137,16 @@ void GameManager::update(int dt) {
       }
     }
 
+    for (int i = 0; i < static_cast<int>(state.airplanes.size()); i++) {
+      auto& airplane = *state.airplanes[i];
+      updateAirplane(airplane, state, dt);
+      if (airplane.shouldRemove) {
+        state.airplanes.erase(state.airplanes.begin() + i);
+        i--;
+        continue;
+      }
+    }
+
     for (auto it = state.bushes.begin(); it != state.bushes.end();) {
       auto& bush = it->second;
       if (bush->shouldRemove) {
@@ -153,6 +157,7 @@ void GameManager::update(int dt) {
     }
 
     checkCollisions(state);
+    updateSpawners(state, dt);
     checkGameFlow(state, dt);
   }
 
@@ -261,6 +266,10 @@ void GameManager::render() {
 
   for (const auto& bullet : state.bullets) {
     r.renderBullet(*bullet);
+  }
+
+  for (const auto& airplane : state.airplanes) {
+    r.renderAirplane(*airplane);
   }
 
   for (const auto& particle : state.particles) {

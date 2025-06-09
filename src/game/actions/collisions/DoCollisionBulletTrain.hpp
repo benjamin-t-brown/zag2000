@@ -30,7 +30,10 @@ class DoCollisionBulletTrain : public AbstractAction {
         int y = ind / localState.playAreaWidthTiles;
         // dont allow bushes on bottom row
         if (y < localState.playAreaHeightTiles - 1) {
-          enqueueAction(localState, new SpawnBush(std::make_pair(x, y)), 0);
+          // dont allow bushes on left and right edges
+          if (x > 0 && x < localState.playAreaWidthTiles - 1) {
+            enqueueAction(localState, new SpawnBush(std::make_pair(x, y)), 0);
+          }
         }
       }
       int trainInd = getTrainInd(localState, *trainPtr);
@@ -52,9 +55,9 @@ class DoCollisionBulletTrain : public AbstractAction {
       }
 
       if (trainPtr->isHead) {
-        localState.player.score += 25;
+        localState.player.score += 100;
       } else {
-        localState.player.score += 15;
+        localState.player.score += 10;
       }
     }
   }

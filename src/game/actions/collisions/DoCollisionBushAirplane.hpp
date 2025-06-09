@@ -8,28 +8,19 @@ namespace program {
 
 namespace actions {
 
-class DoCollisionBulletBush : public AbstractAction {
-  Bullet* bulletPtr;
+class DoCollisionBushAirplane : public AbstractAction {
   Bush* bushPtr;
 
   void act() override {
     State& localState = *this->state;
-    if (findBulletByPtr(localState, bulletPtr).has_value()) {
-      bulletPtr->shouldRemove = true;
-    }
     int bushInd = getPlayerAreaIndFromPos(localState, bushPtr->x, bushPtr->y);
     if (localState.bushes.find(bushInd) != localState.bushes.end()) {
-      bushPtr->hp -= 1;
-      if (bushPtr->hp <= 0) {
-        bushPtr->shouldRemove = true;
-        localState.player.score += 1;
-      }
+      bushPtr->marked = true;
     }
   }
 
 public:
-  DoCollisionBulletBush(Bullet* bulletPtr, Bush* bushPtr)
-      : bulletPtr(bulletPtr), bushPtr(bushPtr) {}
+  DoCollisionBushAirplane(Bush* bush) : bushPtr(bush) {}
 };
 
 } // namespace actions

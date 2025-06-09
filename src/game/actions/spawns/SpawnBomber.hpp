@@ -16,12 +16,11 @@ class SpawnBomber : public AbstractAction {
     Bomber* bomber = new Bomber();
     bomber->physics.x = isRightSide
                             ? localState.playAreaXOffset +
-                                  localState.playAreaWidthTiles * TILE_WIDTH -
-                                  TILE_WIDTH / 2.
-                            : localState.playAreaXOffset + TILE_WIDTH / 2.;
+                                  localState.playAreaWidthTiles * TILE_WIDTH
+                            : localState.playAreaXOffset;
     bomber->physics.y = localState.playAreaBottomYStart;
     bomber->physics.friction = 0.008;
-    bomber->speed = 0.0015;
+    bomber->speed = 0.0011;
     bomber->heading.rotationRate = 0.35;
     setNewWalkTarget(*bomber, localState);
 
@@ -33,6 +32,10 @@ public:
     bomber.walkX =
         rand() % state.playAreaWidthTiles * TILE_WIDTH + state.playAreaXOffset;
     bomber.walkY = rand() % 7 + state.playAreaBottomYStart;
+  }
+  static void setNextBomberTimer(State& state) {
+    int ms = 2000 + rand() % 10000;
+    timer::start(state.bomberSpawnTimer, ms);
   }
   SpawnBomber(bool isRightSide) : isRightSide(isRightSide) {}
 };

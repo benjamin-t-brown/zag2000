@@ -1,13 +1,23 @@
-#include "UpdateBomber.h"
+#include "UpdateEntities.h"
 #include "game/State.h"
+#include "game/actions/spawns/SpawnAirplane.hpp"
 #include "game/actions/spawns/SpawnBomb.hpp"
 #include "game/actions/spawns/SpawnBomber.hpp"
 #include "game/actions/spawns/SpawnCollisionCircle.hpp"
 #include "game/actions/spawns/SpawnParticle.hpp"
+#include "game/actions/spawns/SpawnTrain.hpp"
 #include "utils/Timer.hpp"
 #include <cmath>
 
 namespace program {
+void updateBullet(Bullet& bullet, State& state, int dt) {
+  physics::updatePhysics(bullet.physics, dt);
+
+  if (bullet.physics.y < state.playAreaYOffset) {
+    bullet.shouldRemove = true;
+  }
+}
+
 void updateBomber(Bomber& bomber, State& state, int dt) {
   double nextAngle = physics::getAngleTowards(
       bomber.physics,
@@ -51,7 +61,6 @@ void updateBomber(Bomber& bomber, State& state, int dt) {
 void updateBomb(Bomb& bomb, State& state, int dt) {
   timer::update(bomb.transformTimer, dt);
   if (timer::isComplete(bomb.transformTimer)) {
-    // boom
     enqueueAction(state,
                   new actions::SpawnParticle(
                       actions::PARTICLE_BOMB_EXPL, bomb.x2, bomb.y2, 400),
@@ -61,6 +70,56 @@ void updateBomb(Bomb& bomb, State& state, int dt) {
         new actions::SpawnCollisionCircle(std::make_pair(bomb.x2, bomb.y2)),
         0);
     bomb.shouldRemove = true;
+  }
+}
+
+void updateAirplane(Airplane& airplane, State& state, int dt) {
+  airplane.x += airplane.vx * dt;
+  if (airplane.x < state.playAreaXOffset ||
+      airplane.x >
+          state.playAreaXOffset + state.playAreaWidthTiles * TILE_WIDTH) {
+    airplane.shouldRemove = true;
+  }
+  timer::update(airplane.engineSoundTimer, dt);
+  if (timer::isComplete(airplane.engineSoundTimer)) {
+    state.soundsToPlay.push_back("airplane");
+    timer::start(airplane.engineSoundTimer);
+  }
+}
+
+void updateSpawners(State& state, int dt) {
+  timer::update(state.bomberSpawnTimer, dt);
+  if (timer::isComplete(state.bomberSpawnTimer)) {
+    actions::SpawnBomber::setNextBomberTimer(state);
+    int numBombers = state.bombers.size();
+    if ((state.level <= 3 && numBombers < 1) ||
+        (state.level > 3 && numBombers < 3)) {
+      enqueueAction(state, new actions::SpawnBomber(rand() % 2), 0);
+    }
+  }
+
+  timer::update(state.additionalTrainSpawnTimer, dt);
+  if (timer::isComplete(state.additionalTrainSpawnTimer)) {
+    actions::SpawnTrain::setAdditionalTrainSpawnTimer(state);
+    TrainDirectionH hDirection = rand() % 2 == 0 ? TRAIN_RIGHT : TRAIN_LEFT;
+    int xTile = hDirection == TRAIN_RIGHT ? 0 : state.playAreaWidthTiles;
+    int yTile = (state.playAreaHeightTiles - 6);
+    enqueueAction(
+        state,
+        new actions::SpawnTrain(std::make_pair(xTile, yTile),
+                                0,
+                                0.15 + static_cast<double>(state.level) * 0.03,
+                                hDirection),
+        0);
+  }
+
+  timer::update(state.airplaneSpawnTimer, dt);
+  if (timer::isComplete(state.airplaneSpawnTimer)) {
+    actions::SpawnAirplane::setNextAirplaneTimer(state);
+    enqueueAction(
+        state,
+        new actions::SpawnAirplane((rand() % 2) ? TRAIN_LEFT : TRAIN_RIGHT),
+        0);
   }
 }
 } // namespace program

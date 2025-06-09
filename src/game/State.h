@@ -73,7 +73,6 @@ struct Train : Removable {
   bool isPoisoned = false;
 };
 
-
 struct Bomber : Removable {
   Physics physics;
   Timer shootTimer;
@@ -94,9 +93,12 @@ struct Bomb : Removable {
 };
 
 struct Airplane : Removable {
-  Physics physics;
+  Timer engineSoundTimer = Timer{250};
   int w = TILE_WIDTH;
   int h = TILE_HEIGHT;
+  double x = 0;
+  double y = 0;
+  double vx = 0.;
 };
 
 enum DuoMissileType {
@@ -164,6 +166,10 @@ struct State {
   std::vector<std::string> soundsToPlay;
   std::vector<int> bg;
   Player player;
+  Timer bomberSpawnTimer;
+  Timer airplaneSpawnTimer;
+  Timer duoMissileSpawnTimer;
+  Timer additionalTrainSpawnTimer;
 
   ControlState controlState = CONTROL_MENU;
   int level = 0;
@@ -175,6 +181,7 @@ struct State {
   bool controlIsWaitingForGameOver = false;
 };
 
+// enqueue action, run it, then wait ms
 inline void
 enqueueAction(State& state, actions::AbstractAction* action, int ms) {
   auto actionPtr =

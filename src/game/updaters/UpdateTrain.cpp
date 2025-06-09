@@ -81,6 +81,10 @@ void trainCheckSetHeadRotationOrNext(Train& head, State& state, double nextX) {
 
     int trainAheadInd = getTrainLookAheadInd(state, head);
     if (isBushAtInd(state, trainAheadInd)) {
+      Bush& bush = *state.bushes[trainAheadInd];
+      if (bush.marked) {
+        head.isPoisoned = true;
+      }
       head.isRotating = true;
       head.x = prevX;
       timer::start(head.rotationTimer);

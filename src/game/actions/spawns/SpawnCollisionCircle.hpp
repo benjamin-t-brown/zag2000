@@ -2,6 +2,7 @@
 
 #include "game/State.h"
 #include "game/actions/AbstractAction.h"
+#include "game/actions/ui/PlaySound.hpp"
 
 namespace program {
 
@@ -21,6 +22,7 @@ class SpawnCollisionCircle : public AbstractAction {
 
     localState.collisionCircles.push_back(
         std::unique_ptr<CollisionCircle>(circle));
+    enqueueAction(localState, new PlaySound("bomb_expl"), 0);
   }
 
 public:

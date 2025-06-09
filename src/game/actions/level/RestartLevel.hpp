@@ -6,6 +6,9 @@
 #include "game/actions/control/SetControlState.hpp"
 #include "game/actions/level/CreateTrainsForLevel.hpp"
 #include "game/actions/spawns/ReSpawnBush.hpp"
+#include "game/actions/spawns/SpawnAirplane.hpp"
+#include "game/actions/spawns/SpawnBomber.hpp"
+#include "game/actions/spawns/SpawnTrain.hpp"
 
 namespace program {
 
@@ -21,6 +24,8 @@ class RestartLevel : public AbstractAction {
         localState.playAreaWidthTiles * TILE_WIDTH / 2.;
     localState.player.physics.y =
         localState.playAreaBottomYStart + TILE_HEIGHT * 2 + TILE_HEIGHT / 2.;
+    localState.player.physics.vx = 0;
+    localState.player.physics.vy = 0;
 
     int playerInd = getPlayerAreaIndFromPos(
         localState, localState.player.physics.x, localState.player.physics.y);
@@ -32,6 +37,9 @@ class RestartLevel : public AbstractAction {
         bush->shouldRemove = true;
       }
     }
+    SpawnTrain::setAdditionalTrainSpawnTimer(localState);
+    SpawnBomber::setNextBomberTimer(localState);
+    SpawnAirplane::setNextAirplaneTimer(localState);
 
     enqueueAction(localState, nullptr, 500);
     localState.bullets.clear();
@@ -44,11 +52,12 @@ class RestartLevel : public AbstractAction {
       }
     }
 
+    enqueueAction(localState, nullptr, 1000);
     enqueueAction(localState, new actions::ClearEntities(), 0);
     enqueueAction(
         localState, new actions::CreateTrainsForLevel(localState.level), 0);
-    enqueueAction(
-        localState, new actions::SetControlState(CONTROL_IN_GAME), 200);
+    enqueueAction(localState, nullptr, 200);
+    enqueueAction(localState, new actions::SetControlState(CONTROL_IN_GAME), 0);
   }
 
 public:

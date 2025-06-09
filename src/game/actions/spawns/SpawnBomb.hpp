@@ -2,6 +2,7 @@
 
 #include "game/State.h"
 #include "game/actions/AbstractAction.h"
+#include "game/actions/ui/PlaySound.hpp"
 
 namespace program {
 
@@ -22,6 +23,8 @@ class SpawnBomb : public AbstractAction {
     bomb->transformTimer = Timer{750, 0};
 
     localState.bombs.push_back(std::unique_ptr<Bomb>(bomb));
+
+    enqueueAction(localState, new actions::PlaySound("shoot_bomb"), 0);
   }
 
 public:

@@ -261,7 +261,19 @@ void Render::renderBomb(const Bomb& bomb) {
   }
 }
 
-void Render::renderAirplane(const Airplane& plane) {}
+void Render::renderAirplane(const Airplane& plane) {
+  Animation& anim = getAnim("plane_left");
+  window.getDraw().drawAnimation(
+      //
+      anim,
+      RenderableParamsEx{
+          //
+          .scale = {TILE_SCALE, TILE_SCALE},
+          .x = static_cast<int>(plane.x),
+          .y = static_cast<int>(plane.y),
+          .flipped = plane.vx > 0,
+      });
+}
 
 void Render::renderDuoMissile(const DuoMissile& missile) {}
 
@@ -360,6 +372,32 @@ void Render::renderUi() {
                  .color = {255, 255, 255, 255},
                  .centered = false,
              });
+
+  d.drawText(std::to_string(state.trainHeads.size()) + " " +
+                 TRANSLATE("Trains"),
+             sdl2w::RenderTextParams{
+                 .fontName = "default",
+                 .fontSize = sdl2w::TextSize::TEXT_SIZE_20,
+                 .x = renderW - 100,
+                 .y = 100,
+                 .color = {255, 255, 255, 255},
+                 .centered = false,
+             });
+  // render position of train
+  int ctr = 1;
+  for (const auto& trainHead : state.trainHeads) {
+    d.drawText(std::to_string(static_cast<int>(trainHead->x)) + ", " +
+                   std::to_string(static_cast<int>(trainHead->y)),
+               sdl2w::RenderTextParams{
+                   .fontName = "default",
+                   .fontSize = sdl2w::TextSize::TEXT_SIZE_20,
+                   .x = renderW - 100,
+                   .y = 100 + 20 * (ctr),
+                   .color = {255, 255, 255, 255},
+                   .centered = true,
+               });
+    ctr++;
+  }
 }
 
 } // namespace program
