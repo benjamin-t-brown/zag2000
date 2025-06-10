@@ -3,7 +3,9 @@
 #include "game/actions/spawns/SpawnAirplane.hpp"
 #include "game/actions/spawns/SpawnBomb.hpp"
 #include "game/actions/spawns/SpawnBomber.hpp"
+#include "game/actions/spawns/SpawnBush.hpp"
 #include "game/actions/spawns/SpawnCollisionCircle.hpp"
+#include "game/actions/spawns/SpawnDuoMissile.hpp"
 #include "game/actions/spawns/SpawnParticle.hpp"
 #include "game/actions/spawns/SpawnTrain.hpp"
 #include "utils/Timer.hpp"
@@ -54,7 +56,7 @@ void updateBomber(Bomber& bomber, State& state, int dt) {
     auto bomberPos = physics::getPos(bomber.physics);
     std::pair<double, double> target = std::make_pair(targetX, targetY);
     enqueueAction(state, new actions::SpawnBomb(bomberPos, target), 0);
-    timer::start(bomber.shootTimer, 1000);
+    timer::start(bomber.shootTimer);
   }
 }
 
@@ -84,6 +86,34 @@ void updateAirplane(Airplane& airplane, State& state, int dt) {
   if (timer::isComplete(airplane.engineSoundTimer)) {
     state.soundsToPlay.push_back("airplane");
     timer::start(airplane.engineSoundTimer);
+  }
+}
+
+void updateDuoMissile(DuoMissile& missile, State& state, int dt) {
+  physics::updatePhysics(missile.physics, dt);
+  if (missile.type == DUO_MISSILE_SINGLE) {
+    if (missile.physics.vy == 0) {
+      timer::update(missile.turnTimer, dt);
+      if (timer::isComplete(missile.turnTimer)) {
+        missile.physics.vy = std::abs(missile.physics.vx) + 0.03;
+        missile.physics.vx = 0;
+      }
+    }
+  } else {
+    timer::update(missile.spawnBushTimer, dt);
+    if (timer::isComplete(missile.spawnBushTimer)) {
+      actions::SpawnDuoMissile::setNextDuoMissileSpawnBushTimer(missile);
+      int tileX = static_cast<int>((missile.physics.x - state.playAreaXOffset) /
+                                   TILE_WIDTH);
+      int tileY = static_cast<int>((missile.physics.y - state.playAreaYOffset) /
+                                   TILE_HEIGHT);
+      if (tileX < 0 || tileX >= state.playAreaWidthTiles || tileY < 0 ||
+          tileY >= state.playAreaHeightTiles) {
+        return;
+      }
+      enqueueAction(
+          state, new actions::SpawnBush(std::make_pair(tileX, tileY)), 0);
+    }
   }
 }
 
@@ -120,6 +150,12 @@ void updateSpawners(State& state, int dt) {
         state,
         new actions::SpawnAirplane((rand() % 2) ? TRAIN_LEFT : TRAIN_RIGHT),
         0);
+  }
+
+  timer::update(state.duoMissileSpawnTimer, dt);
+  if (timer::isComplete(state.duoMissileSpawnTimer)) {
+    actions::SpawnDuoMissile::setNextDuoMissileTimer(state);
+    enqueueAction(state, new actions::SpawnDuoMissile(), 0);
   }
 }
 } // namespace program

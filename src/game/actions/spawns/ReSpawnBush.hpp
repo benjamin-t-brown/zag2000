@@ -18,6 +18,7 @@ class ResetBush : public AbstractAction {
     bushPtr->hp = 4;
     bushPtr->marked = false;
     bushPtr->shouldRemove = false;
+    state->player.score += 5;
   }
 
 public:

@@ -8,6 +8,7 @@
 #include "game/actions/spawns/ReSpawnBush.hpp"
 #include "game/actions/spawns/SpawnAirplane.hpp"
 #include "game/actions/spawns/SpawnBomber.hpp"
+#include "game/actions/spawns/SpawnDuoMissile.hpp"
 #include "game/actions/spawns/SpawnTrain.hpp"
 
 namespace program {
@@ -40,6 +41,7 @@ class RestartLevel : public AbstractAction {
     SpawnTrain::setAdditionalTrainSpawnTimer(localState);
     SpawnBomber::setNextBomberTimer(localState);
     SpawnAirplane::setNextAirplaneTimer(localState);
+    SpawnDuoMissile::setNextDuoMissileTimer(localState);
 
     enqueueAction(localState, nullptr, 500);
     localState.bullets.clear();

@@ -65,9 +65,6 @@ class SpawnParticle : public AbstractAction {
     }
 
     if (type == PARTICLE_TEXT) {
-      // For text particles, we use the text instead of an animation
-      LOG(INFO) << "Spawning text particle: " << text << " at (" << pos.first
-                << ", " << pos.second << ") for " << ms << "ms" << LOG_ENDL;
       localState.particles.push_back(std::make_unique<Particle>(Particle{
           .animation = nullptr,
           .timer = Timer{static_cast<double>(ms)},
@@ -80,9 +77,6 @@ class SpawnParticle : public AbstractAction {
     }
 
     sdl2w::Animation* anim = new sdl2w::Animation();
-
-    LOG(INFO) << "Spawning particle: " << animName << " at (" << pos.first
-              << ", " << pos.second << ") for " << ms << "ms" << LOG_ENDL;
 
     localState.particles.push_back(std::make_unique<Particle>(Particle{
         .animation = std::unique_ptr<sdl2w::Animation>(anim),

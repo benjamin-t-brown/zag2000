@@ -22,6 +22,7 @@ class SpawnBomber : public AbstractAction {
     bomber->physics.friction = 0.008;
     bomber->speed = 0.0011;
     bomber->heading.rotationRate = 0.35;
+    timer::start(bomber->shootTimer, 750);
     setNewWalkTarget(*bomber, localState);
 
     localState.bombers.push_back(std::unique_ptr<Bomber>(bomber));
@@ -34,7 +35,7 @@ public:
     bomber.walkY = rand() % 7 + state.playAreaBottomYStart;
   }
   static void setNextBomberTimer(State& state) {
-    int ms = 2000 + rand() % 10000;
+    int ms = 3000 + rand() % 8000;
     timer::start(state.bomberSpawnTimer, ms);
   }
   SpawnBomber(bool isRightSide) : isRightSide(isRightSide) {}

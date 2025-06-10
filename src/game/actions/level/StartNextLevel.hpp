@@ -1,14 +1,10 @@
 #pragma once
 
-#include "ClearEntities.hpp"
 #include "game/State.h"
 #include "game/actions/AbstractAction.h"
 #include "game/actions/control/SetControlState.hpp"
 #include "game/actions/level/CreateTrainsForLevel.hpp"
-#include "game/actions/spawns/SpawnBomber.hpp"
 #include "game/actions/spawns/SpawnBush.hpp"
-#include "game/actions/spawns/SpawnLevelBushes.hpp"
-#include "game/actions/spawns/SpawnTrain.hpp"
 #include <cstdlib>
 
 namespace program {
@@ -21,11 +17,6 @@ class StartNextLevel : public AbstractAction {
     State& localState = *this->state;
 
     localState.level = level;
-    // actions::ClearEntities clearEntitiesAction;
-    // clearEntitiesAction.execute(&localState);
-    // if (level == 1) {
-    //   localState.bushes.clear();
-    // }
     localState.controlState = CONTROL_WAITING;
 
     int floatingBushX = rand() % (localState.playAreaWidthTiles - 4) + 2;

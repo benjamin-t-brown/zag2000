@@ -8,6 +8,7 @@ Sound,hit,assets/snd/hit.wav
 Sound,hit2,assets/snd/hit2.wav
 Sound,missile_spawn,assets/snd/missile_spawn.wav
 Sound,missile_speed,assets/snd/missile_speed.wav
+Sound,missile_split,assets/snd/missile_split.wav
 Sound,player_hit,assets/snd/player_hit.wav
 Sound,player_missile,assets/snd/player_missile.wav
 Sound,shoot_bomb,assets/snd/shoot_bomb.wav

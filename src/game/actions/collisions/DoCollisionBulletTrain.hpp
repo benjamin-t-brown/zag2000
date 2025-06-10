@@ -22,8 +22,6 @@ class DoCollisionBulletTrain : public AbstractAction {
       bulletPtr->shouldRemove = true;
     }
     if (findTrainByPtr(localState, trainPtr).has_value()) {
-      trainPtr->shouldRemove = true;
-
       int ind = getTrainLookAheadInd(localState, *trainPtr);
       if (ind > 0) {
         int x = ind % localState.playAreaWidthTiles;
@@ -59,6 +57,8 @@ class DoCollisionBulletTrain : public AbstractAction {
       } else {
         localState.player.score += 10;
       }
+
+      trainPtr->shouldRemove = true;
     }
   }
 

@@ -37,7 +37,7 @@ public:
 
   void execute(State* state) {
     this->state = state;
-    LOG(INFO) << "Executing action: " << getName() << LOG_ENDL;
+    // LOG(INFO) << "Executing action: " << getName() << LOG_ENDL;
     act();
   }
 

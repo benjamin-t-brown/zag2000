@@ -5,7 +5,6 @@
 #include "lib/sdl2w/Init.h"
 #include "lib/sdl2w/L10n.h"
 #include "lib/sdl2w/Logger.h"
-#include "utils/Timer.hpp"
 #include <SDL2/SDL_timer.h>
 
 void runProgram(int argc, char** argv) {

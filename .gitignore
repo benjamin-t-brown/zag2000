@@ -16,3 +16,4 @@ output.log
 *.ini
 hiscore.txt
 sdl2w/
+node_modules/

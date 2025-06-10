@@ -3,11 +3,13 @@
 #include "game/actions/collisions/DoCollisionBulletAirplane.hpp"
 #include "game/actions/collisions/DoCollisionBulletBomber.hpp"
 #include "game/actions/collisions/DoCollisionBulletBush.hpp"
+#include "game/actions/collisions/DoCollisionBulletDuoMissile.hpp"
 #include "game/actions/collisions/DoCollisionBulletTrain.hpp"
 #include "game/actions/collisions/DoCollisionBushAirplane.hpp"
 #include "game/actions/collisions/DoCollisionBushCollisionCircle.hpp"
 #include "game/actions/collisions/DoCollisionPlayerBomber.hpp"
 #include "game/actions/collisions/DoCollisionPlayerCollisionCircle.hpp"
+#include "game/actions/collisions/DoCollisionPlayerDuoMissile.hpp"
 #include "game/actions/collisions/DoCollisionPlayerTrain.hpp"
 
 namespace program {
@@ -45,13 +47,6 @@ bool collidesRectCircle(double rectX,
 }
 
 void checkCollisionBulletBush(State& state, Bullet& bullet, Bush& bush) {
-  // if (bullet.physics.x >= bush.x - TILE_WIDTH_D / 2. &&
-  //     bullet.physics.x <= bush.x + TILE_WIDTH_D / 2. &&
-  //     bullet.physics.y >= bush.y - TILE_HEIGHT_D / 2. &&
-  //     bullet.physics.y <= bush.y + TILE_HEIGHT_D / 2.) {
-  //   enqueueAction(state, new actions::DoCollisionBulletBush(&bullet, &bush),
-  //   0);
-  // }
   if (collidesWithRect(bullet.physics.x,
                        bullet.physics.y,
                        bullet.w,
@@ -94,6 +89,22 @@ void checkCollisionBulletAirplane(State& state,
   }
 }
 
+void checkCollisionBulletDuoMissile(State& state,
+                                    Bullet& bullet,
+                                    DuoMissile& missile) {
+  if (collidesWithRect(bullet.physics.x,
+                       bullet.physics.y,
+                       bullet.w,
+                       bullet.h,
+                       missile.physics.x,
+                       missile.physics.y,
+                       missile.w,
+                       missile.h)) {
+    enqueueAction(
+        state, new actions::DoCollisionBulletDuoMissile(&bullet, &missile), 0);
+  }
+}
+
 void checkCollisionPlayerTrain(State& state, Player& player, Train& train) {
   if (collidesWithRect(player.physics.x,
                        player.physics.y,
@@ -117,6 +128,21 @@ void checkCollisionPlayerBomber(State& state, Player& player, Bomber& bomber) {
                        TILE_WIDTH_D,
                        TILE_HEIGHT_D)) {
     enqueueAction(state, new actions::DoCollisionPlayerBomber(&bomber), 0);
+  }
+}
+
+void checkCollisionPlayerDuoMissile(State& state,
+                                    Player& player,
+                                    DuoMissile& missile) {
+  if (collidesWithRect(player.physics.x,
+                       player.physics.y,
+                       PLAYER_COLLIDE_WIDTH,
+                       PLAYER_COLLIDE_HEIGHT,
+                       missile.physics.x,
+                       missile.physics.y,
+                       missile.w,
+                       missile.h)) {
+    enqueueAction(state, new actions::DoCollisionPlayerDuoMissile(&missile), 0);
   }
 }
 
@@ -208,6 +234,13 @@ void checkCollisions(State& state) {
       }
       checkCollisionBulletAirplane(state, *bullet, *airplane);
     }
+
+    for (auto& duoMissile : state.duoMissiles) {
+      if (duoMissile->shouldRemove) {
+        continue;
+      }
+      checkCollisionBulletDuoMissile(state, *bullet, *duoMissile);
+    }
   }
 
   for (auto& trainHead : state.trainHeads) {
@@ -239,6 +272,12 @@ void checkCollisions(State& state) {
   }
   for (auto& bomber : state.bombers) {
     checkCollisionPlayerBomber(state, state.player, *bomber);
+    if (state.player.dead) {
+      return;
+    }
+  }
+  for (auto& duoMissile : state.duoMissiles) {
+    checkCollisionPlayerDuoMissile(state, state.player, *duoMissile);
     if (state.player.dead) {
       return;
     }

@@ -20,7 +20,7 @@ class DoCollisionBulletAirplane : public AbstractAction {
       bulletPtr->shouldRemove = true;
     }
     if (findAirplaneByPtr(localState, airplanePtr).has_value()) {
-      int score = 500;
+      int score = 1000;
       localState.player.score += score;
       airplanePtr->shouldRemove = true;
 

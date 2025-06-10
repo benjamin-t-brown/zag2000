@@ -108,7 +108,8 @@ enum DuoMissileType {
 
 struct DuoMissile : Removable {
   Physics physics;
-  Timer splitTimer;
+  Timer turnTimer;
+  Timer spawnBushTimer;
   DuoMissileType type = DUO_MISSILE_COMBINED;
   int w = TILE_WIDTH;
   int h = TILE_HEIGHT;
@@ -189,10 +190,11 @@ enqueueAction(State& state, actions::AbstractAction* action, int ms) {
                                Timer{static_cast<double>(ms), 0}};
   state.sequentialActionsNext.push_back(
       std::unique_ptr<actions::AsyncAction>(actionPtr));
-  if (actionPtr->action) {
-    LOG(INFO) << "Enqueued action: " << actionPtr->action->getName() << " for "
-              << ms << "ms" << LOG_ENDL;
-  }
+  // if (actionPtr->action) {
+  //   LOG(INFO) << "Enqueued action: " << actionPtr->action->getName() << " for
+  //   "
+  //             << ms << "ms" << LOG_ENDL;
+  // }
 }
 
 inline void addParallelAction(State& state,
@@ -209,6 +211,44 @@ inline void moveSequentialActions(State& state) {
       std::make_move_iterator(state.sequentialActionsNext.begin()),
       std::make_move_iterator(state.sequentialActionsNext.end()));
   state.sequentialActionsNext.clear();
+}
+
+inline void updateState(State& state, int dt) {
+  moveSequentialActions(state);
+  while (!state.sequentialActions.empty()) {
+    auto& delayedActionPtr = state.sequentialActions.front();
+    actions::AsyncAction& delayedAction = *delayedActionPtr;
+    if (delayedAction.action.get() != nullptr) {
+      delayedAction.action->execute(&state);
+      delayedAction.action = nullptr;
+    }
+
+    timer::update(delayedAction.timer, dt);
+    if (timer::isComplete(delayedAction.timer)) {
+      bool shouldLoop = delayedAction.timer.duration == 0;
+      state.sequentialActions.erase(state.sequentialActions.begin());
+      if (shouldLoop) {
+        moveSequentialActions(state);
+        continue;
+      } else {
+        break;
+      }
+    } else {
+      break;
+    }
+  }
+  for (unsigned int i = 0; i < state.parallelActions.size(); i++) {
+    auto& delayedActionPtr = state.parallelActions[i];
+    actions::AsyncAction& delayedAction = *delayedActionPtr;
+    timer::update(delayedAction.timer, dt);
+    if (timer::isComplete(delayedAction.timer)) {
+      if (delayedAction.action != nullptr) {
+        delayedAction.action->execute(&state);
+      }
+      state.parallelActions.erase(state.parallelActions.begin() + i);
+      i--;
+    }
+  }
 }
 
 inline std::optional<Bullet*> findBulletByPtr(State& state, Bullet* bulletPtr) {
@@ -261,5 +301,13 @@ inline std::optional<Airplane*> findAirplaneByPtr(State& state,
   }
   return std::nullopt;
 }
-
+inline std::optional<DuoMissile*> findDuoMissileByPtr(State& state,
+                                                      DuoMissile* missilePtr) {
+  for (auto& missile : state.duoMissiles) {
+    if (missile.get() == missilePtr) {
+      return missile.get();
+    }
+  }
+  return std::nullopt;
+}
 } // namespace program

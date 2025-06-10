@@ -29,40 +29,8 @@ void GameManager::load() {
 }
 
 void GameManager::start() {
-  auto [renderWidth, renderHeight] = window.getDraw().getRenderSize();
-  state.playAreaWidthTiles = renderWidth / TILE_WIDTH;
-  state.playAreaHeightTiles = renderHeight / TILE_HEIGHT - 1 + 1;
-  state.playAreaXOffset =
-      renderWidth / 2 - state.playAreaWidthTiles * TILE_WIDTH / 2;
-  state.playAreaYOffset = 0;
-  state.playAreaBottomYStart =
-      (state.playAreaHeightTiles - 5) * TILE_HEIGHT + state.playAreaYOffset;
-
-  state.player.physics.x =
-      state.playAreaXOffset + state.playAreaWidthTiles * TILE_WIDTH / 2.;
-  state.player.physics.y =
-      state.playAreaBottomYStart + TILE_HEIGHT * 2 + TILE_HEIGHT / 2.;
-
-  for (int i = 0; i < state.playAreaWidthTiles; i++) {
-    for (int j = 0; j < state.playAreaHeightTiles; j++) {
-      state.bg.push_back(rand() % 10);
-    }
-  }
-
-  // enqueueAction(state, new actions::SpawnBush(std::make_pair(15 - 3, 1)), 0);
-  // enqueueAction(state, new actions::SpawnBush(std::make_pair(15 - 3, 2)), 0);
-  // enqueueAction(state, new actions::SpawnBush(std::make_pair(15 - 3, 3)), 0);
-  // enqueueAction(state, new actions::StartNextLevel(1), 0);
-  // enqueueAction(
-  //     state,
-  //     new actions::SpawnTrain(std::make_pair(0, state.playAreaHeightTiles -
-  //     3),
-  //                             5,
-  //                             0.21,
-  //                             TRAIN_RIGHT),
-  //     0);
-  // enqueueAction(state, new actions::SpawnBomber(false), 0);
-  enqueueAction(state, new actions::StartGame(), 0);
+  auto [renderW, renderH] = window.getDraw().getRenderSize();
+  enqueueAction(state, new actions::StartGame(renderW, renderH), 0);
 
   state.controlState = CONTROL_WAITING;
   emshelpers::notifyGameStarted();
@@ -90,20 +58,21 @@ void GameManager::update(int dt) {
       auto& trainHead = state.trainHeads[i];
       updateTrain(*trainHead, state, dt);
 
-      Train* prevTrain = trainHead.get();
-      Train* nextTrain = trainHead->next.get();
-      // while (nextTrain != nullptr) {
-      //   if (nextTrain->shouldRemove) {
-      //     prevTrain->next = nullptr;
-      //   }
-      //   prevTrain = nextTrain;
-      //   nextTrain = nextTrain->next.get();
-      // }
-
       if (trainHead->shouldRemove) {
         state.trainHeads.erase(state.trainHeads.begin() + i);
         i--;
         continue;
+      }
+
+      Train* prevTrain = trainHead.get();
+      Train* nextTrain = trainHead->next.get();
+      while (nextTrain != nullptr) {
+        if (nextTrain->shouldRemove) {
+          prevTrain->next = nullptr;
+          break;
+        }
+        prevTrain = nextTrain;
+        nextTrain = nextTrain->next.get();
       }
     }
 
@@ -156,6 +125,16 @@ void GameManager::update(int dt) {
       }
     }
 
+    for (int i = 0; i < static_cast<int>(state.duoMissiles.size()); i++) {
+      auto& duoMissile = *state.duoMissiles[i];
+      updateDuoMissile(duoMissile, state, dt);
+      if (duoMissile.shouldRemove) {
+        state.duoMissiles.erase(state.duoMissiles.begin() + i);
+        i--;
+        continue;
+      }
+    }
+
     checkCollisions(state);
     updateSpawners(state, dt);
     checkGameFlow(state, dt);
@@ -193,45 +172,10 @@ void GameManager::update(int dt) {
 
   r.updateAnimations(dt);
 
-  moveSequentialActions(state);
-  while (!state.sequentialActions.empty()) {
-    auto& delayedActionPtr = state.sequentialActions.front();
-    actions::AsyncAction& delayedAction = *delayedActionPtr;
-    if (delayedAction.action.get() != nullptr) {
-      delayedAction.action->execute(&state);
-      delayedAction.action = nullptr;
-    }
-
-    timer::update(delayedAction.timer, dt);
-    if (timer::isComplete(delayedAction.timer)) {
-      bool shouldLoop = delayedAction.timer.duration == 0;
-      state.sequentialActions.erase(state.sequentialActions.begin());
-      if (shouldLoop) {
-        moveSequentialActions(state);
-        continue;
-      } else {
-        break;
-      }
-    } else {
-      break;
-    }
-  }
-  for (unsigned int i = 0; i < state.parallelActions.size(); i++) {
-    auto& delayedActionPtr = state.parallelActions[i];
-    actions::AsyncAction& delayedAction = *delayedActionPtr;
-    timer::update(delayedAction.timer, dt);
-    if (timer::isComplete(delayedAction.timer)) {
-      if (delayedAction.action != nullptr) {
-        delayedAction.action->execute(&state);
-      }
-      state.parallelActions.erase(state.parallelActions.begin() + i);
-      i--;
-    }
-  }
+  updateState(state, dt);
 }
 
 void GameManager::render() {
-
   window.getDraw().drawRect(state.playAreaXOffset,
                             state.playAreaYOffset,
                             state.playAreaWidthTiles * TILE_WIDTH,
@@ -270,6 +214,10 @@ void GameManager::render() {
 
   for (const auto& airplane : state.airplanes) {
     r.renderAirplane(*airplane);
+  }
+
+  for (const auto& duoMissile : state.duoMissiles) {
+    r.renderDuoMissile(*duoMissile);
   }
 
   for (const auto& particle : state.particles) {

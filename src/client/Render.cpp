@@ -275,7 +275,22 @@ void Render::renderAirplane(const Airplane& plane) {
       });
 }
 
-void Render::renderDuoMissile(const DuoMissile& missile) {}
+void Render::renderDuoMissile(const DuoMissile& missile) {
+  sdl2w::Sprite& sprite = window.getStore().getSprite(
+      missile.type == DUO_MISSILE_COMBINED ? "duo_missile_0"
+      : missile.physics.vy == 0            ? "duo_missile_2" // missile left
+                                           : "duo_missile_1");
+  window.getDraw().drawSprite(
+      //
+      sprite,
+      RenderableParamsEx{
+          //
+          .scale = {TILE_SCALE, TILE_SCALE},
+          .x = static_cast<int>(missile.physics.x),
+          .y = static_cast<int>(missile.physics.y),
+          .flipped = missile.physics.vx > 0,
+      });
+}
 
 void Render::renderParticle(const Particle& particle) {
   if (particle.animation != nullptr && particle.animation->isInitialized()) {
@@ -383,19 +398,22 @@ void Render::renderUi() {
                  .color = {255, 255, 255, 255},
                  .centered = false,
              });
-  // render position of train
+
   int ctr = 1;
-  for (const auto& trainHead : state.trainHeads) {
-    d.drawText(std::to_string(static_cast<int>(trainHead->x)) + ", " +
-                   std::to_string(static_cast<int>(trainHead->y)),
-               sdl2w::RenderTextParams{
-                   .fontName = "default",
-                   .fontSize = sdl2w::TextSize::TEXT_SIZE_20,
-                   .x = renderW - 100,
-                   .y = 100 + 20 * (ctr),
-                   .color = {255, 255, 255, 255},
-                   .centered = true,
-               });
+  for (const auto& entity : state.duoMissiles) {
+    if (entity->type == DUO_MISSILE_COMBINED) {
+      d.drawText(std::to_string(static_cast<int>(entity->physics.x)) + ", " +
+                     std::to_string(static_cast<int>(entity->physics.y)),
+                 sdl2w::RenderTextParams{
+                     .fontName = "default",
+                     .fontSize = sdl2w::TextSize::TEXT_SIZE_20,
+                     .x = renderW - 100,
+                     .y = 100 + 20 * (ctr),
+                     .color = {255, 255, 255, 255},
+                     .centered = true,
+                 });
+    }
+
     ctr++;
   }
 }

@@ -1,4 +1,4 @@
-// make testui TestHeadCollisions
+// make testui TestAnim
 
 #include "../setupTest.hpp"
 #include "client/Render.h"
