@@ -92,13 +92,13 @@ void GameManager::update(int dt) {
 
       Train* prevTrain = trainHead.get();
       Train* nextTrain = trainHead->next.get();
-      while (nextTrain) {
-        if (nextTrain->shouldRemove) {
-          prevTrain->next = nullptr;
-        }
-        prevTrain = nextTrain;
-        nextTrain = nextTrain->next.get();
-      }
+      // while (nextTrain != nullptr) {
+      //   if (nextTrain->shouldRemove) {
+      //     prevTrain->next = nullptr;
+      //   }
+      //   prevTrain = nextTrain;
+      //   nextTrain = nextTrain->next.get();
+      // }
 
       if (trainHead->shouldRemove) {
         state.trainHeads.erase(state.trainHeads.begin() + i);
