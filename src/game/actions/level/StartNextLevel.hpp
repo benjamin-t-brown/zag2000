@@ -13,6 +13,7 @@ namespace actions {
 
 class StartNextLevel : public AbstractAction {
   int level;
+  ControlState nextControlState;
   void act() override {
     State& localState = *this->state;
 
@@ -28,11 +29,13 @@ class StartNextLevel : public AbstractAction {
         0);
     enqueueAction(
         localState, new actions::CreateTrainsForLevel(localState.level), 0);
-    enqueueAction(localState, new actions::SetControlState(CONTROL_IN_GAME), 0);
+    enqueueAction(
+        localState, new actions::SetControlState(nextControlState), 0);
   }
 
 public:
-  StartNextLevel(int level) : level(level) {}
+  StartNextLevel(int level, ControlState nextControlState)
+      : level(level), nextControlState(nextControlState) {}
 };
 
 } // namespace actions

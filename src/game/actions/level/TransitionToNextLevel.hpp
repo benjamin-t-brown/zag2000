@@ -13,7 +13,7 @@ class TransitionToNextLevel : public AbstractAction {
   void act() override {
     State& localState = *this->state;
 
-    enqueueAction(localState, new actions::StartNextLevel(localState.level + 1), 0);
+    enqueueAction(localState, new actions::StartNextLevel(localState.level + 1, CONTROL_IN_GAME), 0);
   }
 
 public:

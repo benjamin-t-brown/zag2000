@@ -14,7 +14,7 @@ class SetControlState : public AbstractAction {
 
     localState.controlState = controlState;
     localState.controlIsWaitingForGameOver = false;
-    if (controlState == CONTROL_IN_GAME) {
+    if (controlState == CONTROL_IN_GAME || controlState == CONTROL_MENU) {
       localState.player.dead = false;
     }
   }

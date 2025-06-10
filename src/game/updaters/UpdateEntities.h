@@ -8,4 +8,5 @@ void updateBomb(Bomb& bomb, State& state, int dt);
 void updateAirplane(Airplane& airplane, State& state, int dt);
 void updateDuoMissile(DuoMissile& missile, State& state, int dt);
 void updateSpawners(State& state, int dt);
+void updateMenu(State& state, int dt);
 } // namespace program

@@ -13,7 +13,7 @@ namespace program {
 
 namespace actions {
 
-class StartGame : public AbstractAction {
+class StartMenu : public AbstractAction {
   void act() override {
     State& localState = *this->state;
     actions::ClearEntities clearEntitiesAction;
@@ -31,6 +31,12 @@ class StartGame : public AbstractAction {
     localState.player.score = 0;
     localState.player.dead = false;
 
+    localState.player.walkX = localState.playAreaXOffset +
+                              localState.playAreaWidthTiles * TILE_WIDTH / 2.;
+    localState.player.walkY =
+        localState.playAreaBottomYStart + TILE_HEIGHT * 2 + TILE_HEIGHT / 2.;
+    localState.controlState = CONTROL_MENU;
+
     for (int i = 0; i < localState.playAreaWidthTiles; i++) {
       for (int j = 0; j < localState.playAreaHeightTiles; j++) {
         localState.bg.push_back(rand() % 10);
@@ -42,14 +48,14 @@ class StartGame : public AbstractAction {
     SpawnAirplane::setNextAirplaneTimer(localState);
     SpawnDuoMissile::setNextDuoMissileTimer(localState);
 
-    enqueueAction(localState, new actions::StartNextLevel(1, CONTROL_IN_GAME), 0);
+    enqueueAction(localState, new actions::StartNextLevel(1, CONTROL_MENU), 0);
     enqueueAction(localState, new actions::SpawnLevelBushes(), 0);
 
-    LOG(INFO) << "Start Game action executed" << LOG_ENDL;
+    LOG(INFO) << "Start Menu action executed" << LOG_ENDL;
   }
 
 public:
-  StartGame() {}
+  StartMenu() {}
 };
 
 } // namespace actions

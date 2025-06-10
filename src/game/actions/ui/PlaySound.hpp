@@ -14,6 +14,12 @@ class PlaySound : public AbstractAction {
   void act() override {
     State& localState = *this->state;
 
+    if (localState.controlState == CONTROL_MENU) {
+      if (soundName != "start_game") {
+        return;
+      }
+    }
+
     localState.soundsToPlay.push_back(soundName);
   }
 

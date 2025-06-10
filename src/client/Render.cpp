@@ -48,6 +48,9 @@ void Render::renderBg() {
   const State& state = *statePtr;
   sdl2w::Draw& d = window.getDraw();
   auto [renderW, _] = d.getRenderSize();
+  if (state.bg.empty()) {
+    return;
+  }
 
   for (int i = 0; i < state.playAreaWidthTiles; i++) {
     for (int j = 0; j < state.playAreaHeightTiles; j++) {
@@ -330,7 +333,7 @@ void Render::renderUi() {
   sdl2w::Draw& d = window.getDraw();
   auto [renderW, renderH] = d.getRenderSize();
 
-  if (state.controlState == CONTROL_MENU) {
+  if (state.controlState == CONTROL_MENU || state.controlState == CONTROL_WAITING_MENU) {
     d.drawText(TRANSLATE("Press button to start"),
                sdl2w::RenderTextParams{
                    .fontName = "default",
@@ -342,7 +345,7 @@ void Render::renderUi() {
                });
     return;
   } else if (state.controlState == CONTROL_SHOWING_HIGH_SCORE) {
-    d.drawRect(0, 0, renderW, TILE_HEIGHT, {77, 57, 57, 255});
+    d.drawRect(0, 0, renderW, TILE_HEIGHT, {57, 57, 57, 255});
     d.drawText(TRANSLATE("High Score") + ": " +
                    std::to_string(state.player.score),
                sdl2w::RenderTextParams{
@@ -356,7 +359,7 @@ void Render::renderUi() {
     return;
   }
 
-  d.drawRect(0, 0, renderW, TILE_HEIGHT, {77, 57, 57, 255});
+  d.drawRect(0, 0, renderW, TILE_HEIGHT, {57, 57, 57, 255});
 
   d.drawText(TRANSLATE("Lives") + ": " + std::to_string(state.player.lives),
              sdl2w::RenderTextParams{

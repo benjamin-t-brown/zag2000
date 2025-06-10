@@ -11,8 +11,6 @@
 
 namespace program {
 
-// constexpr int TILE_WIDTH = 40;
-// constexpr int TILE_HEIGHT = 33;
 constexpr int TILE_WIDTH = 25;
 constexpr int TILE_HEIGHT = 25;
 constexpr double TILE_WIDTH_D = static_cast<double>(TILE_WIDTH);
@@ -134,11 +132,14 @@ struct Player {
   Physics physics{.friction = 0.03};
   PlayerControls controls;
   Timer shootTimer{16};
+  Heading heading;
   double acc = 0.0065;
   int score = 0;
   int lives = 3;
   int w = TILE_WIDTH;
   int h = TILE_HEIGHT;
+  int walkX = 0;
+  int walkY = 0;
   bool dead = false;
   bool canShoot = false;
 };
@@ -146,6 +147,7 @@ struct Player {
 enum ControlState {
   CONTROL_MENU,
   CONTROL_WAITING,
+  CONTROL_WAITING_MENU,
   CONTROL_IN_GAME,
   CONTROL_DEFEATED,
   CONTROL_SHOWING_HIGH_SCORE
@@ -174,8 +176,8 @@ struct State {
 
   ControlState controlState = CONTROL_MENU;
   int level = 0;
-  int playAreaWidthTiles = 0;
-  int playAreaHeightTiles = 0;
+  int playAreaWidthTiles = 10;
+  int playAreaHeightTiles = 10;
   int playAreaXOffset = 0;
   int playAreaYOffset = 0;
   int playAreaBottomYStart = 0;

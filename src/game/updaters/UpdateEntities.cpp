@@ -84,7 +84,7 @@ void updateAirplane(Airplane& airplane, State& state, int dt) {
   }
   timer::update(airplane.engineSoundTimer, dt);
   if (timer::isComplete(airplane.engineSoundTimer)) {
-    state.soundsToPlay.push_back("airplane");
+    enqueueAction(state, new actions::PlaySound("airplane"), 0);
     timer::start(airplane.engineSoundTimer);
   }
 }
@@ -157,5 +157,44 @@ void updateSpawners(State& state, int dt) {
     actions::SpawnDuoMissile::setNextDuoMissileTimer(state);
     enqueueAction(state, new actions::SpawnDuoMissile(), 0);
   }
+}
+
+void playerSetNewWalkTarget(Player& player, State& state) {
+  player.walkX =
+      rand() % state.playAreaWidthTiles * TILE_WIDTH + state.playAreaXOffset;
+  player.walkY = rand() % 4 + state.playAreaBottomYStart + TILE_HEIGHT * 2;
+}
+
+void updateMenu(State& state, int dt) {
+  Player& player = state.player;
+  double nextAngle = physics::getAngleTowards(
+      player.physics,
+      std::make_pair<double, double>(player.walkX, player.walkY));
+  double currAngle = player.heading.angle;
+  if (currAngle <= nextAngle) {
+    if (std::abs(currAngle - nextAngle) < 180) {
+      player.heading.turnDirection = HeadingTurnDirection::RIGHT;
+    } else {
+      player.heading.turnDirection = HeadingTurnDirection::LEFT;
+    }
+  } else {
+    if (std::abs(currAngle - nextAngle) < 180) {
+      player.heading.turnDirection = HeadingTurnDirection::LEFT;
+    } else {
+      player.heading.turnDirection = HeadingTurnDirection::RIGHT;
+    }
+  }
+  physics::applyForce(player.physics, player.heading.angle, 0.0041);
+  // physics::updatePhysics(player.physics, dt);
+  physics::updateHeading(player.heading, dt);
+
+  double distanceToWalk =
+      std::sqrt(std::pow(player.walkX - player.physics.x, 2) +
+                std::pow(player.walkY - player.physics.y, 2));
+  if (distanceToWalk < 50.0) {
+    playerSetNewWalkTarget(player, state);
+  }
+
+  player.controls.shoot = true;
 }
 } // namespace program

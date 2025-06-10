@@ -2,6 +2,7 @@
 #include "game/State.h"
 #include "game/actions/level/EndGame.hpp"
 #include "game/actions/level/RestartLevel.hpp"
+#include "game/actions/level/RestartMenu.hpp"
 #include "game/actions/level/TransitionToNextLevel.hpp"
 
 namespace program {
@@ -19,6 +20,19 @@ void checkGameFlow(State& state, int dt) {
       }
     } else if (state.trainHeads.size() == 0) {
       enqueueAction(state, new actions::TransitionToNextLevel(), 0);
+    }
+  }
+  if (state.controlState == CONTROL_MENU) {
+    if (state.sequentialActionsNext.empty()) {
+      if (state.player.dead) {
+        if (!state.controlIsWaitingForGameOver) {
+          state.controlIsWaitingForGameOver = true;
+          enqueueAction(state, new actions::RestartMenu(), 0);
+        }
+      } else if (state.trainHeads.size() == 0) {
+        LOG(INFO) << "No trains left, restarting menu" << LOG_ENDL;
+        enqueueAction(state, new actions::RestartMenu(), 0);
+      }
     }
   }
 }

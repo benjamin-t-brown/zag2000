@@ -15,11 +15,11 @@ namespace program {
 
 namespace actions {
 
-class RestartLevel : public AbstractAction {
+class RestartMenu : public AbstractAction {
   void act() override {
     State& localState = *this->state;
 
-    localState.controlState = CONTROL_WAITING;
+    localState.controlState = CONTROL_WAITING_MENU;
     localState.player.physics.x =
         localState.playAreaXOffset +
         localState.playAreaWidthTiles * TILE_WIDTH / 2.;
@@ -59,13 +59,13 @@ class RestartLevel : public AbstractAction {
     enqueueAction(
         localState, new actions::CreateTrainsForLevel(localState.level), 0);
     enqueueAction(localState, nullptr, 200);
-    enqueueAction(localState, new actions::SetControlState(CONTROL_IN_GAME), 0);
+    enqueueAction(localState, new actions::SetControlState(CONTROL_MENU), 0);
 
-    LOG(INFO) << "Restart Level action executed" << LOG_ENDL;
+    LOG(INFO) << "Restart Menu action executed" << LOG_ENDL;
   }
 
 public:
-  RestartLevel() {}
+  RestartMenu() {}
 };
 
 } // namespace actions

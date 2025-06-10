@@ -1,13 +1,9 @@
 #include "GameManager.h"
 #include "State.h"
-#include "actions/collisions/DoCollisionPlayerTrain.hpp"
 #include "actions/control/SetControlState.hpp"
 #include "actions/level/StartGame.hpp"
-#include "actions/level/StartNextLevel.hpp"
-#include "actions/spawns/SpawnBomber.hpp"
-#include "actions/spawns/SpawnTrain.hpp"
+#include "actions/level/StartMenu.hpp"
 #include "client/Keys.hpp"
-#include "game/actions/spawns/SpawnTrain.hpp"
 #include "lib/sdl2w/EmscriptenHelpers.h"
 #include "lib/sdl2w/Window.h"
 #include "updaters/CheckCollisions.h"
@@ -25,22 +21,32 @@ GameManager::~GameManager() {}
 
 void GameManager::load() {
   r.setup(state);
+  auto [renderWidth, renderHeight] = window.getDraw().getRenderSize();
+  state.playAreaWidthTiles = renderWidth / TILE_WIDTH;
+  state.playAreaHeightTiles = renderHeight / TILE_HEIGHT - 1 + 1;
+  state.playAreaXOffset =
+      renderWidth / 2 - state.playAreaWidthTiles * TILE_WIDTH / 2;
+  state.playAreaYOffset = 0;
+  state.playAreaBottomYStart =
+      (state.playAreaHeightTiles - 5) * TILE_HEIGHT + state.playAreaYOffset;
   emshelpers::notifyGameReady();
 }
 
 void GameManager::start() {
-  auto [renderW, renderH] = window.getDraw().getRenderSize();
-  enqueueAction(state, new actions::StartGame(renderW, renderH), 0);
-
-  state.controlState = CONTROL_WAITING;
-  emshelpers::notifyGameStarted();
+  state.controlState = CONTROL_MENU;
+  //
+  actions::StartMenu startMenuAction;
+  startMenuAction.execute(&state);
 }
 
 void GameManager::handleKeyPress(const std::string& key) {
   // LOG(INFO) << "Key pressed: " << key << LOG_ENDL;
   if (state.controlState == CONTROL_MENU) {
     if (isConfirmKey(key)) {
-      start();
+
+      state.controlState = CONTROL_WAITING;
+      enqueueAction(state, new actions::StartGame(), 0);
+      emshelpers::notifyGameStarted();
     }
   } else if (state.controlState == CONTROL_IN_GAME) {
   } else if (state.controlState == CONTROL_SHOWING_HIGH_SCORE) {
@@ -51,9 +57,13 @@ void GameManager::handleKeyPress(const std::string& key) {
 void GameManager::handleKeyRelease(const std::string& key) {}
 
 void GameManager::update(int dt) {
+  if (state.controlState == CONTROL_MENU) {
+    updateMenu(state, dt);
+  }
   updatePlayer(state.player, state, window.getEvents(), dt);
 
-  if (state.controlState == CONTROL_IN_GAME) {
+  if (state.controlState == CONTROL_IN_GAME ||
+      state.controlState == CONTROL_MENU) {
     for (int i = 0; i < static_cast<int>(state.trainHeads.size()); i++) {
       auto& trainHead = state.trainHeads[i];
       updateTrain(*trainHead, state, dt);
