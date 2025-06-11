@@ -132,7 +132,8 @@ struct Player {
   Physics physics{.friction = 0.03};
   PlayerControls controls;
   Timer shootTimer{16};
-  Heading heading;
+  Timer walkTimeoutTimer{3000};
+  Heading heading{0., 0.65, HeadingTurnDirection::NONE};
   double acc = 0.0065;
   int score = 0;
   int lives = 3;
@@ -181,6 +182,9 @@ struct State {
   int playAreaXOffset = 0;
   int playAreaYOffset = 0;
   int playAreaBottomYStart = 0;
+  int highScore = 0;
+  int lastScore = 0;
+  int numExtraLives = 0;
   bool controlIsWaitingForGameOver = false;
 };
 

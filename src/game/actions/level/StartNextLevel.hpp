@@ -23,6 +23,8 @@ class StartNextLevel : public AbstractAction {
     int floatingBushX = rand() % (localState.playAreaWidthTiles - 4) + 2;
     int floatingBushY = 0;
 
+    localState.player.score += 1000 + localState.level * 100;
+
     enqueueAction(
         localState,
         new actions::SpawnBush(std::make_pair(floatingBushX, floatingBushY)),

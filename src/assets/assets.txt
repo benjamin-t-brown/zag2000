@@ -13,6 +13,7 @@ Sound,player_hit,assets/snd/player_hit.wav
 Sound,player_missile,assets/snd/player_missile.wav
 Sound,shoot_bomb,assets/snd/shoot_bomb.wav
 Sound,start_game,assets/snd/start_game.wav
+Sound,zag_hiscore,assets/snd/zag_hiscore.wav
 Music,zag,assets/snd/zag.wav
 
 Pic,bg_lower_gradient,assets/img/bg_lower_gradient.png

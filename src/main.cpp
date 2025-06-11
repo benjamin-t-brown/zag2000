@@ -51,12 +51,6 @@ void runProgram(int argc, char** argv) {
   };
 
   auto _onInitialized = [&]() {
-    // load high scores
-    // auto hiscores = hiscore::getHighScores();
-    // if (hiscores.size()) {
-    //   // game.state.wins = hiscores[0].score;
-    // }
-
     game.start();
   };
 
@@ -70,9 +64,7 @@ void runProgram(int argc, char** argv) {
 #endif
 
     game.update(std::min(window.getDeltaTime(), 100));
-    // game.update(8);
     game.render();
-    // SDL_Delay(33);
     return true;
   };
 

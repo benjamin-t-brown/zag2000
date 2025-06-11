@@ -60,8 +60,6 @@ class RestartLevel : public AbstractAction {
         localState, new actions::CreateTrainsForLevel(localState.level), 0);
     enqueueAction(localState, nullptr, 200);
     enqueueAction(localState, new actions::SetControlState(CONTROL_IN_GAME), 0);
-
-    LOG(INFO) << "Restart Level action executed" << LOG_ENDL;
   }
 
 public:

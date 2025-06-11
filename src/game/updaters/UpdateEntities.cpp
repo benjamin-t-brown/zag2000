@@ -159,12 +159,6 @@ void updateSpawners(State& state, int dt) {
   }
 }
 
-void playerSetNewWalkTarget(Player& player, State& state) {
-  player.walkX =
-      rand() % state.playAreaWidthTiles * TILE_WIDTH + state.playAreaXOffset;
-  player.walkY = rand() % 4 + state.playAreaBottomYStart + TILE_HEIGHT * 2;
-}
-
 void updateMenu(State& state, int dt) {
   Player& player = state.player;
   double nextAngle = physics::getAngleTowards(
@@ -185,13 +179,13 @@ void updateMenu(State& state, int dt) {
     }
   }
   physics::applyForce(player.physics, player.heading.angle, 0.0041);
-  // physics::updatePhysics(player.physics, dt);
   physics::updateHeading(player.heading, dt);
 
+  timer::update(player.walkTimeoutTimer, dt);
   double distanceToWalk =
       std::sqrt(std::pow(player.walkX - player.physics.x, 2) +
                 std::pow(player.walkY - player.physics.y, 2));
-  if (distanceToWalk < 50.0) {
+  if (distanceToWalk < 50.0 || timer::isComplete(player.walkTimeoutTimer)) {
     playerSetNewWalkTarget(player, state);
   }
 

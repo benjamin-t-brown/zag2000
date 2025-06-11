@@ -8,6 +8,7 @@
 #include "game/actions/spawns/SpawnBomber.hpp"
 #include "game/actions/spawns/SpawnDuoMissile.hpp"
 #include "game/actions/spawns/SpawnLevelBushes.hpp"
+#include "game/actions/ui/PlaySound.hpp"
 
 namespace program {
 
@@ -27,9 +28,10 @@ class StartGame : public AbstractAction {
         localState.playAreaBottomYStart + TILE_HEIGHT * 2 + TILE_HEIGHT / 2.;
     localState.player.physics.vx = 0;
     localState.player.physics.vy = 0;
-    localState.player.lives = 3;
+    localState.player.lives = 0;
     localState.player.score = 0;
     localState.player.dead = false;
+    localState.numExtraLives = 0;
 
     for (int i = 0; i < localState.playAreaWidthTiles; i++) {
       for (int j = 0; j < localState.playAreaHeightTiles; j++) {
@@ -42,10 +44,10 @@ class StartGame : public AbstractAction {
     SpawnAirplane::setNextAirplaneTimer(localState);
     SpawnDuoMissile::setNextDuoMissileTimer(localState);
 
-    enqueueAction(localState, new actions::StartNextLevel(1, CONTROL_IN_GAME), 0);
+    enqueueAction(
+        localState, new actions::StartNextLevel(1, CONTROL_IN_GAME), 0);
     enqueueAction(localState, new actions::SpawnLevelBushes(), 0);
-
-    LOG(INFO) << "Start Game action executed" << LOG_ENDL;
+    enqueueAction(localState, new actions::PlaySound("start_game"), 0);
   }
 
 public:

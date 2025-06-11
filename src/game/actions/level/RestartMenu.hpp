@@ -10,6 +10,7 @@
 #include "game/actions/spawns/SpawnBomber.hpp"
 #include "game/actions/spawns/SpawnDuoMissile.hpp"
 #include "game/actions/spawns/SpawnTrain.hpp"
+#include "game/updaters/UpdateEntities.h"
 
 namespace program {
 
@@ -54,14 +55,14 @@ class RestartMenu : public AbstractAction {
       }
     }
 
+    playerSetNewWalkTarget(localState.player, localState);
+
     enqueueAction(localState, nullptr, 1000);
     enqueueAction(localState, new actions::ClearEntities(), 0);
     enqueueAction(
         localState, new actions::CreateTrainsForLevel(localState.level), 0);
     enqueueAction(localState, nullptr, 200);
     enqueueAction(localState, new actions::SetControlState(CONTROL_MENU), 0);
-
-    LOG(INFO) << "Restart Menu action executed" << LOG_ENDL;
   }
 
 public:

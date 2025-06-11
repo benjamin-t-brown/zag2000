@@ -333,21 +333,64 @@ void Render::renderUi() {
   sdl2w::Draw& d = window.getDraw();
   auto [renderW, renderH] = d.getRenderSize();
 
-  if (state.controlState == CONTROL_MENU || state.controlState == CONTROL_WAITING_MENU) {
-    d.drawText(TRANSLATE("Press button to start"),
+  if (state.controlState == CONTROL_MENU ||
+      state.controlState == CONTROL_WAITING_MENU) {
+    d.drawRect(0, 0, renderW, TILE_HEIGHT, {0, 0, 0, 255});
+    d.drawText("ZAG 2000",
+               sdl2w::RenderTextParams{
+                   .fontName = "default",
+                   .fontSize = sdl2w::TextSize::TEXT_SIZE_48,
+                   .x = renderW / 2 + 2,
+                   .y = renderH / 2 - renderH / 4 + 2,
+                   .color = {185, 185, 185, 255},
+                   .centered = true,
+               });
+    d.drawText("ZAG 2000",
+               sdl2w::RenderTextParams{
+                   .fontName = "default",
+                   .fontSize = sdl2w::TextSize::TEXT_SIZE_48,
+                   .x = renderW / 2,
+                   .y = renderH / 2 - renderH / 4,
+                   .color = {255, 255, 255, 255},
+                   .centered = true,
+               });
+
+    if (state.lastScore > 0) {
+      d.drawText(TRANSLATE("Last Score") + ": " +
+                     std::to_string(state.lastScore),
+                 sdl2w::RenderTextParams{
+                     .fontName = "default",
+                     .fontSize = sdl2w::TextSize::TEXT_SIZE_16,
+                     .x = renderW / 2,
+                     .y = renderH / 2 + renderH / 4 - renderH / 8,
+                     .color = {255, 255, 255, 255},
+                     .centered = true,
+                 });
+    }
+    d.drawText(TRANSLATE("High Score") + ": " + std::to_string(state.highScore),
+               sdl2w::RenderTextParams{
+                   .fontName = "default",
+                   .fontSize = sdl2w::TextSize::TEXT_SIZE_16,
+                   .x = renderW / 2,
+                   .y = renderH / 2 + renderH / 4 - renderH / 8 + 20,
+                   .color = {255, 255, 255, 255},
+                   .centered = true,
+               });
+
+    d.drawText(TRANSLATE("Press button to start."),
                sdl2w::RenderTextParams{
                    .fontName = "default",
                    .fontSize = sdl2w::TextSize::TEXT_SIZE_20,
                    .x = renderW / 2,
-                   .y = renderH / 2,
+                   .y = renderH / 2 + renderH / 4,
                    .color = {255, 255, 255, 255},
                    .centered = true,
                });
+
     return;
   } else if (state.controlState == CONTROL_SHOWING_HIGH_SCORE) {
     d.drawRect(0, 0, renderW, TILE_HEIGHT, {57, 57, 57, 255});
-    d.drawText(TRANSLATE("High Score") + ": " +
-                   std::to_string(state.player.score),
+    d.drawText(TRANSLATE("Score") + ": " + std::to_string(state.lastScore),
                sdl2w::RenderTextParams{
                    .fontName = "default",
                    .fontSize = sdl2w::TextSize::TEXT_SIZE_24,
@@ -390,35 +433,6 @@ void Render::renderUi() {
                  .color = {255, 255, 255, 255},
                  .centered = false,
              });
-
-  d.drawText(std::to_string(state.trainHeads.size()) + " " +
-                 TRANSLATE("Trains"),
-             sdl2w::RenderTextParams{
-                 .fontName = "default",
-                 .fontSize = sdl2w::TextSize::TEXT_SIZE_20,
-                 .x = renderW - 100,
-                 .y = 100,
-                 .color = {255, 255, 255, 255},
-                 .centered = false,
-             });
-
-  int ctr = 1;
-  for (const auto& entity : state.duoMissiles) {
-    if (entity->type == DUO_MISSILE_COMBINED) {
-      d.drawText(std::to_string(static_cast<int>(entity->physics.x)) + ", " +
-                     std::to_string(static_cast<int>(entity->physics.y)),
-                 sdl2w::RenderTextParams{
-                     .fontName = "default",
-                     .fontSize = sdl2w::TextSize::TEXT_SIZE_20,
-                     .x = renderW - 100,
-                     .y = 100 + 20 * (ctr),
-                     .color = {255, 255, 255, 255},
-                     .centered = true,
-                 });
-    }
-
-    ctr++;
-  }
 }
 
 } // namespace program

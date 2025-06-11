@@ -4,6 +4,8 @@
 #include "game/actions/level/RestartLevel.hpp"
 #include "game/actions/level/RestartMenu.hpp"
 #include "game/actions/level/TransitionToNextLevel.hpp"
+#include "game/actions/ui/PlaySound.hpp"
+#include "lib/sdl2w/EmscriptenHelpers.h"
 
 namespace program {
 void checkGameFlow(State& state, int dt) {
@@ -15,6 +17,7 @@ void checkGameFlow(State& state, int dt) {
           enqueueAction(state, new actions::RestartLevel(), 0);
           state.player.lives--;
         } else {
+          LOG(INFO) << "END GAME" << LOG_ENDL;
           enqueueAction(state, new actions::EndGame(), 0);
         }
       }
@@ -30,9 +33,22 @@ void checkGameFlow(State& state, int dt) {
           enqueueAction(state, new actions::RestartMenu(), 0);
         }
       } else if (state.trainHeads.size() == 0) {
-        LOG(INFO) << "No trains left, restarting menu" << LOG_ENDL;
+        LOG(INFO) << "No trains left, restarting menu, achievement unlocked!"
+                  << LOG_ENDL;
         enqueueAction(state, new actions::RestartMenu(), 0);
+        emshelpers::notifyGameGeneric("menu_no_trains_left");
       }
+    }
+  }
+
+  if (state.controlState == CONTROL_IN_GAME) {
+    const int extraLifeThreshold = 10000;
+    int relativeScore =
+        state.player.score - state.numExtraLives * extraLifeThreshold;
+    if (relativeScore >= extraLifeThreshold) {
+      state.numExtraLives++;
+      state.player.lives++;
+      enqueueAction(state, new actions::PlaySound("extra_life"), 0);
     }
   }
 }

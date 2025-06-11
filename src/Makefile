@@ -18,9 +18,6 @@ lib/hiscore/hiscore.cpp
 
 TEST_CODE=\
 
-TEST_CODE_UI=\
-TestHeadCollision.cpp\
-
 TARGET ?= native
 BASE_BUILD_DIR = build
 

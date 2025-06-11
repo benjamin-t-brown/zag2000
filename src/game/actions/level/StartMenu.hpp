@@ -8,6 +8,7 @@
 #include "game/actions/spawns/SpawnBomber.hpp"
 #include "game/actions/spawns/SpawnDuoMissile.hpp"
 #include "game/actions/spawns/SpawnLevelBushes.hpp"
+#include "game/updaters/UpdateEntities.h"
 
 namespace program {
 
@@ -27,7 +28,7 @@ class StartMenu : public AbstractAction {
         localState.playAreaBottomYStart + TILE_HEIGHT * 2 + TILE_HEIGHT / 2.;
     localState.player.physics.vx = 0;
     localState.player.physics.vy = 0;
-    localState.player.lives = 3;
+    localState.player.lives = 2;
     localState.player.score = 0;
     localState.player.dead = false;
 
@@ -47,11 +48,15 @@ class StartMenu : public AbstractAction {
     SpawnBomber::setNextBomberTimer(localState);
     SpawnAirplane::setNextAirplaneTimer(localState);
     SpawnDuoMissile::setNextDuoMissileTimer(localState);
+    playerSetNewWalkTarget(localState.player, localState);
 
+    localState.player.controls.shoot = true;
+    localState.player.controls.up = false;
+    localState.player.controls.down = false;
+    localState.player.controls.left = false;
+    localState.player.controls.right = false;
     enqueueAction(localState, new actions::StartNextLevel(1, CONTROL_MENU), 0);
     enqueueAction(localState, new actions::SpawnLevelBushes(), 0);
-
-    LOG(INFO) << "Start Menu action executed" << LOG_ENDL;
   }
 
 public:

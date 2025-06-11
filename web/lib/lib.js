@@ -134,12 +134,12 @@ const Lib = {
     this.notifyParentFrame('GAME_STARTED', {});
     config.gameStarted = true;
   },
-  notifyGameCompleted(...results) {
-    this.notifyParentFrame(
-      'GAME_CONCLUDED',
-      results.length > 1 ? results : results[0]
-    );
+  notifyGameCompleted(result) {
+    this.notifyParentFrame('GAME_CONCLUDED', result);
     config.gameStarted = false;
+  },
+  notifyGameGeneric(payload) {
+    this.notifyParentFrame('GAME_GENERIC', payload);
   },
   subscribe(eventName, callback) {
     if (subscriptions[eventName]) {
@@ -167,7 +167,7 @@ const Lib = {
       soundOn: 'Sound on',
       soundOff: 'Sound off',
     };
-  }
+  },
 };
 window.Lib = Lib;
 

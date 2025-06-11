@@ -4,6 +4,7 @@
 #include "actions/level/StartGame.hpp"
 #include "actions/level/StartMenu.hpp"
 #include "client/Keys.hpp"
+#include "lib/hiscore/hiscore.h"
 #include "lib/sdl2w/EmscriptenHelpers.h"
 #include "lib/sdl2w/Window.h"
 #include "updaters/CheckCollisions.h"
@@ -33,6 +34,12 @@ void GameManager::load() {
 }
 
 void GameManager::start() {
+  // load high scores
+  auto hiscores = hiscore::getHighScores();
+  if (hiscores.size()) {
+    state.highScore = hiscores[0].score;
+  }
+
   state.controlState = CONTROL_MENU;
   //
   actions::StartMenu startMenuAction;
@@ -47,6 +54,7 @@ void GameManager::handleKeyPress(const std::string& key) {
       state.controlState = CONTROL_WAITING;
       enqueueAction(state, new actions::StartGame(), 0);
       emshelpers::notifyGameStarted();
+      window.stopMusic();
     }
   } else if (state.controlState == CONTROL_IN_GAME) {
   } else if (state.controlState == CONTROL_SHOWING_HIGH_SCORE) {
@@ -246,6 +254,12 @@ void GameManager::render() {
     window.playSound(soundName);
   }
   state.soundsToPlay.clear();
+
+  if (state.controlState == CONTROL_MENU) {
+    if (!window.isMusicPlaying()) {
+      window.playMusic("zag");
+    }
+  }
 }
 
 } // namespace program

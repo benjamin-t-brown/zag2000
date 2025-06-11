@@ -8,9 +8,7 @@
 #include "game/updaters/UpdateEntities.h"
 #include "game/updaters/UpdatePlayer.h"
 #include "game/updaters/UpdateTrain.h"
-#include "lib/sdl2w/Animation.h"
 #include "lib/sdl2w/Logger.h"
-#include "utils/Timer.hpp"
 #include <SDL2/SDL_timer.h>
 #include <cmath>
 #include <memory>
