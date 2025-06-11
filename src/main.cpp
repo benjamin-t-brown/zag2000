@@ -16,16 +16,16 @@ void runProgram(int argc, char** argv) {
                        {
                            .mode = sdl2w::DrawMode::GPU,
                            .title = "Zag 2000",
-                           .w = w * 2,
-                           .h = h * 2,
+                           .w = w,
+                           .h = h,
                            .x = 25, // SDL_WINDOWPOS_UNDEFINED
                            .y = 50, // SDL_WINDOWPOS_UNDEFINED
                            .renderW = w,
                            .renderH = h,
                        });
-  sdl2w::L10n::init(std::vector<std::string>({})); // TODO add languages
+  sdl2w::L10n::init(std::vector<std::string>({"en", "la"}));
   sdl2w::setupStartupArgs(argc, argv, window);
-  sdl2w::L10n::setLanguage("default"); // TODO remove this
+  // sdl2w::L10n::setLanguage("default"); // FOR DEBUG
   window.getDraw().setBackgroundColor({0, 0, 0});
   window.getStore().loadAndStoreFont("default", "assets/monofonto.ttf");
 

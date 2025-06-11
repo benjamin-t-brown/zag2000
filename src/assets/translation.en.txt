@@ -1,0 +1,7 @@
+[Example Text] {Example Text}
+[High Score] {High Score}
+[Last Score] {Last Score}
+[Level] {Level}
+[Lives] {Lives}
+[Press button to start.] {Press button to start.}
+[Score] {Score}

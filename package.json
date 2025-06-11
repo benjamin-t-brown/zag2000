@@ -3,10 +3,11 @@
   "version": "1.0",
   "license": "MIT",
   "scripts": {
-    "build": "yarn && yarn clean && (cd src && make js) && yarn mv",
+    "build": "yarn && yarn clean && (cd src && make clean && make js) && yarn mv",
     "build:dev": "yarn build",
-    "mv": "mkdirp dist && cp -v public/* dist/",
-    "clean": "rm -rf dist"
+    "mv": "mkdirp dist && cp -rv web/* dist/",
+    "clean": "rm -rf dist",
+    "dist": "http-server dist -p 8080 -c-1"
   },
   "dependencies": {},
   "devDependencies": {

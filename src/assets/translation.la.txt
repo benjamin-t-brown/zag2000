@@ -1,0 +1,7 @@
+[Example Text] {MISSING!}
+[High Score] {MISSING!}
+[Last Score] {MISSING!}
+[Level] {MISSING!}
+[Lives] {MISSING!}
+[Press button to start.] {MISSING!}
+[Score] {MISSING!}
