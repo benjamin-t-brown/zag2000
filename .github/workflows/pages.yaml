@@ -20,6 +20,18 @@ jobs:
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
 
+      - uses: libsdl-org/setup-sdl@main
+        id: sdl
+        with:
+          install-linux-dependencies: true
+          version: 2-latest
+          version-sdl-image: 2-latest
+          
+      - name: 'Configure and build your project'
+        run: |
+          cmake -S . -B build
+          cmake --build build --verbose
+
       - name: Setup EMSDK Cache 🔧
         id: cache-system-libraries
         uses: actions/cache@v3
