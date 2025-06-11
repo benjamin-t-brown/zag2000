@@ -87,6 +87,7 @@ const Lib = {
     if (window.event) {
       window.event.preventDefault();
     }
+    console.log('HANDLE BUTTON DOWN', key);
     Module.ccall('setKeyDown', 'void', ['number'], [key]);
     this.invokeEvent('onButtonDown', key);
   },

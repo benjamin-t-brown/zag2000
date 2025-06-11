@@ -20,8 +20,6 @@ jobs:
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
 
-      - run: sudo apt install build-essential make clangd-17 clang-format libsdl2-ttf-dev libsdl2-image-dev libsdl2-mixer-dev libsdl2-gfx-dev -y
-
       - name: Setup EMSDK Cache 🔧
         id: cache-system-libraries
         uses: actions/cache@v3
@@ -33,6 +31,9 @@ jobs:
         with:
           version: ${{env.EM_VERSION}}
           actions-cache-folder: ${{env.EM_CACHE_FOLDER}}
+
+      - name: Install SDL2
+        run: sudo apt-get update && sudo apt-get install -y libsdl2-dev
 
       - run: chmod +x ./scripts/ci-build.sh
       - run: ./scripts/ci-build.sh

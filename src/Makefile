@@ -71,7 +71,7 @@ LIBS=-Llib/sdl2w
 INCLUDES= -I.
 ifeq ($(TARGET),wasm)
     FLAGS = -Wall -std=c++17 -Oz -flto
-    LIBS = $(EMCC_LIBS) --preload-file assets
+    LIBS = $(EMCC_LIBS) $(EMCC_EXPORTED) --preload-file assets
 		EXE_SUFFIX=.js
     CXX = em++
 else

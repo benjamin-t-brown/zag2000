@@ -276,6 +276,19 @@ const controlsDpadLr = `
 </div>
 `;
 
+const controlsButtonsA = `
+<div class="scaffold-buttons">
+  <div class="scaffold-flex-row-flex-end">
+    <button class="scaffold-button scaffold-button-confirm"
+      onmousedown="${buttonCallbackStrings.Confirm.down}"
+      ontouchstart="${buttonCallbackStrings.Confirm.down}"
+      onmouseup="${buttonCallbackStrings.Confirm.up}"
+      ontouchend="${buttonCallbackStrings.Confirm.up}"
+      >A</button>
+  </div>
+</div>
+`;
+
 const controlsButtonsAb = `
 <div class="scaffold-buttons">
   <div class="scaffold-flex-row-flex-end">
@@ -328,12 +341,31 @@ const controlsButtonsAbShift = `
 `;
 
 // dpadLayout: normal, lr
-// buttonsLayout: 'ab', 'abshift'
+// buttonsLayout: 'a', 'ab', 'abshift'
 window.createOnScreenControls = (dpadLayout, buttonsLayout) => {
-  const controlsDpad =
-    dpadLayout === 'lr' ? controlsDpadLr : controlsDpadNormal;
-  const controlsButtons =
-    buttonsLayout === 'abshift' ? controlsButtonsAbShift : controlsButtonsAb;
+  const dpadMap = {
+    normal: controlsDpadNormal,
+    lr: controlsDpadLr,
+  }
+  const buttonsMap = {
+    a: controlsButtonsA,
+    ab: controlsButtonsAb,
+    abshift: controlsButtonsAbShift,
+  };
+  if (!buttonsMap[buttonsLayout]) {
+    console.error(
+      `[LIB] Invalid buttons layout "${buttonsLayout}", using "ab" instead.`
+    );
+    buttonsLayout = 'ab';
+  }
+  if (!dpadMap[dpadLayout]) {
+    console.error(
+      `[LIB] Invalid dpad layout "${dpadLayout}", using "normal" instead.`
+    );
+    dpadLayout = 'normal';
+  }
+  const controlsDpad = dpadMap[dpadLayout];
+  const controlsButtons = buttonsMap[buttonsLayout];
 
   const scaffoldHtml = `
   <div class="scaffold-outer">
@@ -353,4 +385,4 @@ window.createOnScreenControls = (dpadLayout, buttonsLayout) => {
   } else {
     console.error('Could not find "#controls" element to append scaffold.');
   }
-}
+};

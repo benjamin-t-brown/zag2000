@@ -28,7 +28,7 @@ class StartGame : public AbstractAction {
         localState.playAreaBottomYStart + TILE_HEIGHT * 2 + TILE_HEIGHT / 2.;
     localState.player.physics.vx = 0;
     localState.player.physics.vy = 0;
-    localState.player.lives = 0;
+    localState.player.lives = 2;
     localState.player.score = 0;
     localState.player.dead = false;
     localState.numExtraLives = 0;
