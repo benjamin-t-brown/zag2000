@@ -1,18 +1,18 @@
-# Scoundrel
+# ZAG 2000
 
-The classic solitaire card game adventuring rogue-like.
+The classic game of centipede with a locamotive skin.
 
-The web version of this game is available here: https://benjamin-t-brown.github.io/scoundrel/
+The web version of this game is available here: https://benjamin-t-brown.github.io/zag2000/
 
-Don't know how to play? Instructions (English) are here: https://benjamin-t-brown.github.io/scoundrel/instructions/instructions.en.html
+Don't know how to play? Instructions (English) are here: https://benjamin-t-brown.github.io/zag2000/instructions/instructions.en.html
 
-## ![Scoundrel](https://github.com/user-attachments/assets/12c2d665-9076-43c5-b340-688be0b0ca14)
+![screenshot0](https://github.com/user-attachments/assets/fe893503-617b-4a27-a4f2-5582c5f554b6)
 
-## ![Scoundrel](https://github.com/user-attachments/assets/597d5c45-8882-4183-872f-29cf870db5e5)
+![screenshot1](https://github.com/user-attachments/assets/5f3c18f5-15ae-401c-81c8-14018513e741)
 
-Keyboard controls: arrow keys=move cursor, x=confirm, z=back
+Keyboard controls: arrow keys=move cursor, space=shoot
 
-Gamepad controls: dpad=move cursor, a=confirm, b=back
+Gamepad controls: dpad=move cursor, a=shoot
 
 ## Development
 
@@ -203,14 +203,3 @@ tar -xzvf <GameName>.tar.gz
 NOTE: Don't put the game's folder in the Roms/PORTS directory, this will cause it to not work, even if you edit the sh file to point to it. For whatever reason, homebrew doesn't work from there (at least when using Spruce). This caused me much frustration.
 
 You can add a .png image of the game with the same name as the sh file in the Roms/PORTS/ image folder if you want an image for the game to appear when you hover it.
-
-## Miyoo Mini+
-
-Use Onion OS on this device.  It makes things easier.
-
-Ssh command:
-
-```
-# pw is "onion"
-ssh -o MACs=hmac-sha1 onion@192.168.1.10 -t "cd /mnt/SDCARD; source .tmp_update/script/init_env.sh; ash"
-```
