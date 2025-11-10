@@ -78,7 +78,7 @@ powershell -executionpolicy bypass .\base.ps1
 
 # Update path, then open a new shell
 irm https://git.learnjsthehardway.com/learn-code-the-hard-way/lcthw-windows-installers/raw/branch/master/pathfixer.ps1 -outfile pathfixer.ps1
-powershell -executionpolicy bypass .\pathfixer.ps
+powershell -executionpolicy bypass .\pathfixer.ps1
 
 # Install cpp tools
 irm https://git.learnjsthehardway.com/learn-code-the-hard-way/lcthw-windows-installers/raw/branch/master/cpp.ps1 -outfile cpp.ps1
