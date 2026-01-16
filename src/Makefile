@@ -116,13 +116,13 @@ endif
 # Updated .PHONY to include helper targets and remove the old $(SDL2W_BUILD_OUTPUT_DIR)
 .PHONY: $(EXE) all sdl2w sdl2w_wasm sdl2w_miyoo _ensure_sdl2w_source _copy_sdl2w_artifacts testui
 
+all: sdl2w $(EXE) tests
+
 $(EXE): $(OBJECTS) $(LIB_OBJECTS) $(MAIN_ALL_OBJECT)
 	$(CXX) $(FLAGS) $(INCLUDES) $(MAIN_ALL_OBJECT) $(OBJECTS) $(LIB_OBJECTS) -o $(EXE)$(EXE_SUFFIX) $(LIBS)
 
-all: $(EXE) sdl2w tests
-
 tests:
-	make testsui TEST_UI_CPP_FILE=TestHeadCollision
+	make testsui TEST_UI_CPP_FILE=TestHeadCollisions
 
 sdl2w: _ensure_sdl2w_source
 	@echo "Building standard sdl2w library (running 'make all' in $(SDL2W_DIR_NAME)/src)...";
