@@ -170,7 +170,7 @@ testsui: $(OBJECTS) $(LIB_OBJECTS)
 	$(CXX) $(FLAGS) $(INCLUDES) $(OBJECTS) $(LIB_OBJECTS) __tests__/ui/$(TEST_UI_CPP_FILE).cpp -o TESTUI $(LIBS)
 
 js: sdl2w_wasm
-	make TARGET=wasm -j8
+	$(MAKE) TARGET=wasm -j8 $(EXE)
 	mv $(EXE).js ../web/
 	mv $(EXE).data ../web/
 	mv $(EXE).wasm ../web/
