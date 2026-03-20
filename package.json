@@ -7,10 +7,11 @@
     "build:dev": "yarn build",
     "mv": "mkdirp dist && cp -rv web/* dist/",
     "clean": "rm -rf dist",
-    "dist": "http-server dist -p 8080 -c-1"
+    "dist": "command -v http-server >/dev/null 2>&1 || npx --no-install http-server --version >/dev/null 2>&1 || { echo 'Error: http-server not found. Run \"yarn install\" first.'; exit 1; } && http-server dist -p 8080 -c-1"
   },
   "dependencies": {},
   "devDependencies": {
+    "http-server": "^14.1.1",
     "mkdirp": "^3.0.1"
   }
 }
