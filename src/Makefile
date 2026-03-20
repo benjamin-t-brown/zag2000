@@ -129,7 +129,7 @@ sdl2w: _ensure_sdl2w_source
 
 sdl2w_wasm: _ensure_sdl2w_source
 	@echo "Building sdl2w library for WebAssembly (running 'make wasm' in $(SDL2W_DIR_NAME)/src)...";
-	$(MAKE) -C "$(SDL2W_DIR_NAME)/src" -j8 wasm
+	$(MAKE) -C "$(SDL2W_DIR_NAME)/src" -j8 wasm "FLAGS=-Wall -std=c++17 -Oz"
 	$(MAKE) _copy_sdl2w_artifacts
 
 sdl2w_miyoo: _ensure_sdl2w_source
