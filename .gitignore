@@ -1,6 +1,7 @@
 web/ZAG2000
 web/ZAG2000.js
 web/ZAG2000.data
+src/ZAG2000*
 dist/
 workspace/
 .build/
