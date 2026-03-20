@@ -6,7 +6,7 @@ on:
       - main
 
 env:
-  EM_VERSION: 2.0.10
+  EM_VERSION: 3.1.61
   EM_CACHE_FOLDER: 'emsdk-cache'
 
 jobs:
@@ -23,7 +23,7 @@ jobs:
 
       - name: Setup EMSDK Cache 🔧
         id: cache-system-libraries
-        uses: actions/cache@v3
+        uses: actions/cache@v4
         with:
           path: ${{env.EM_CACHE_FOLDER}}
           key: ${{env.EM_VERSION}}-${{ runner.os }}
