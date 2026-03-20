@@ -109,6 +109,18 @@
     "regex": "cpp",
     "source_location": "cpp"
   },
+  "files.exclude": {
+    "**/.DS_Store": true,
+    "**/.git": true,
+    "**/.hg": true,
+    "**/.svn": true,
+    "**/*.exe": true,
+    "**/*.o": true,
+    "**/*.d": true,
+    "**/bin": true,
+    "**/CVS": true,
+    "**/node_modules": true,
+  },
   "C_Cpp.default.configurationProvider": "",
   "C_Cpp.codeAnalysis.clangTidy.enabled": false,
   "C_Cpp.codeAnalysis.clangTidy.checks.enabled": [

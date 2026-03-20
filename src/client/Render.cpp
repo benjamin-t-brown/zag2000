@@ -16,6 +16,7 @@ using sdl2w::RenderableParams;
 using sdl2w::RenderableParamsEx;
 
 constexpr double TILE_SCALE = 1;
+constexpr double LOCAL_PI = 3.14159265358979323846;
 
 Render::Render(sdl2w::Window& windowA) : window(windowA) {}
 
@@ -233,7 +234,7 @@ void Render::renderBomb(const Bomb& bomb) {
   int x = pct * (bomb.x2 - bomb.x) + bomb.x;
   int y = pct * (bomb.y2 - bomb.y) + bomb.y;
 
-  y -= (TILE_HEIGHT * 2) * std::sin(timer::getPct(bomb.transformTimer) * M_PI);
+  y -= (TILE_HEIGHT * 2) * std::sin(timer::getPct(bomb.transformTimer) * LOCAL_PI);
 
   {
     Animation& anim = getAnim("bomb_anim");
