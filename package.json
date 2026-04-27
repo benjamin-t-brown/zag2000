@@ -3,8 +3,8 @@
   "version": "1.0",
   "license": "MIT",
   "scripts": {
-    "build": "yarn && yarn clean && (cd src && make clean && make js) && yarn mv",
-    "build:dev": "yarn build",
+    "build": "npm install && npm run clean && (cd src && make clean && make js) && npm run mv",
+    "build:dev": "npm run build",
     "mv": "mkdirp dist && cp -rv web/* dist/",
     "compile-commands": "cd src && compiledb make all && mv compile_commands.json ..",
     "clean": "rm -rf dist",
