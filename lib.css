@@ -158,6 +158,12 @@ body {
   -webkit-user-select: none;
 }
 
+#top-bar {
+  position: fixed;
+  display: flex;
+  z-index: 500;
+}
+
 #help-holder {
   position: absolute;
   top: 0px;
