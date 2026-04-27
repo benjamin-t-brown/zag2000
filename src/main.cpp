@@ -1,6 +1,7 @@
 #include "game/GameManager.h"
 #include "lib/sdl2w/AssetLoader.h"
 #include "lib/sdl2w/Draw.h"
+#include "lib/sdl2w/EmscriptenHelpers.h"
 #include "lib/sdl2w/Events.h"
 #include "lib/sdl2w/Init.h"
 #include "lib/sdl2w/L10n.h"
@@ -16,8 +17,8 @@ void runProgram(int argc, char** argv) {
                        {
                            .mode = sdl2w::DrawMode::GPU,
                            .title = "Zag 2000",
-                           .w = w,
-                           .h = h,
+                           .w = !emshelpers::isEmscriptenEnv() ? w * 2 : w,
+                           .h = !emshelpers::isEmscriptenEnv() ? h * 2 : h,
                            .x = 25, // SDL_WINDOWPOS_UNDEFINED
                            .y = 50, // SDL_WINDOWPOS_UNDEFINED
                            .renderW = w,
@@ -50,9 +51,7 @@ void runProgram(int argc, char** argv) {
     return true;
   };
 
-  auto _onInitialized = [&]() {
-    game.start();
-  };
+  auto _onInitialized = [&]() { game.start(); };
 
   auto _mainLoop = [&]() {
     d.setBackgroundColor({10, 10, 10});

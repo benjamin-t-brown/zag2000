@@ -234,7 +234,8 @@ void Render::renderBomb(const Bomb& bomb) {
   int x = pct * (bomb.x2 - bomb.x) + bomb.x;
   int y = pct * (bomb.y2 - bomb.y) + bomb.y;
 
-  y -= (TILE_HEIGHT * 2) * std::sin(timer::getPct(bomb.transformTimer) * LOCAL_PI);
+  y -= (TILE_HEIGHT * 2) *
+       std::sin(timer::getPct(bomb.transformTimer) * LOCAL_PI);
 
   {
     Animation& anim = getAnim("bomb_anim");
@@ -357,7 +358,7 @@ void Render::renderUi() {
                });
 
     if (state.lastScore > 0) {
-      d.drawText(TRANSLATE("Last Score") + ": " +
+      d.drawText(std::string(TRANSLATE("Last Score")) + ": " +
                      std::to_string(state.lastScore),
                  sdl2w::RenderTextParams{
                      .fontName = "default",
@@ -368,7 +369,8 @@ void Render::renderUi() {
                      .centered = true,
                  });
     }
-    d.drawText(TRANSLATE("High Score") + ": " + std::to_string(state.highScore),
+    d.drawText(std::string(TRANSLATE("High Score")) + ": " +
+                   std::to_string(state.highScore),
                sdl2w::RenderTextParams{
                    .fontName = "default",
                    .fontSize = sdl2w::TextSize::TEXT_SIZE_16,
@@ -378,7 +380,7 @@ void Render::renderUi() {
                    .centered = true,
                });
 
-    d.drawText(TRANSLATE("Press button to start."),
+    d.drawText(std::string(TRANSLATE("Press button to start.")),
                sdl2w::RenderTextParams{
                    .fontName = "default",
                    .fontSize = sdl2w::TextSize::TEXT_SIZE_20,
@@ -391,7 +393,8 @@ void Render::renderUi() {
     return;
   } else if (state.controlState == CONTROL_SHOWING_HIGH_SCORE) {
     d.drawRect(0, 0, renderW, TILE_HEIGHT, {57, 57, 57, 255});
-    d.drawText(TRANSLATE("Score") + ": " + std::to_string(state.lastScore),
+    d.drawText(std::string(TRANSLATE("Score")) + ": " +
+                   std::to_string(state.lastScore),
                sdl2w::RenderTextParams{
                    .fontName = "default",
                    .fontSize = sdl2w::TextSize::TEXT_SIZE_24,
@@ -405,7 +408,8 @@ void Render::renderUi() {
 
   d.drawRect(0, 0, renderW, TILE_HEIGHT, {57, 57, 57, 255});
 
-  d.drawText(TRANSLATE("Lives") + ": " + std::to_string(state.player.lives),
+  d.drawText(std::string(TRANSLATE("Lives")) + ": " +
+                 std::to_string(state.player.lives),
              sdl2w::RenderTextParams{
                  .fontName = "default",
                  .fontSize = sdl2w::TextSize::TEXT_SIZE_20,
@@ -415,7 +419,8 @@ void Render::renderUi() {
                  .centered = false,
              });
 
-  d.drawText(TRANSLATE("Score") + ": " + std::to_string(state.player.score),
+  d.drawText(std::string(TRANSLATE("Score")) + ": " +
+                 std::to_string(state.player.score),
              sdl2w::RenderTextParams{
                  .fontName = "default",
                  .fontSize = sdl2w::TextSize::TEXT_SIZE_20,
@@ -425,7 +430,8 @@ void Render::renderUi() {
                  .centered = true,
              });
 
-  d.drawText(TRANSLATE("Level") + ": " + std::to_string(state.level),
+  d.drawText(std::string(TRANSLATE("Level")) + ": " +
+                 std::to_string(state.level),
              sdl2w::RenderTextParams{
                  .fontName = "default",
                  .fontSize = sdl2w::TextSize::TEXT_SIZE_20,
