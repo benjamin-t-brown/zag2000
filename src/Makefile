@@ -14,9 +14,7 @@ game/updaters/UpdateEntities.cpp\
 game/updaters/CheckGameFlow.cpp\
 
 LIB_CODE=\
-lib/hiscore/hiscore.cpp
-
-TEST_CODE=\
+lib/hiscore/hiscore.cpp\
 
 TARGET ?= native
 BASE_BUILD_DIR = build
@@ -30,24 +28,31 @@ MAIN_ALL_OBJECT=$(MAIN_ALL:.cpp=.o)
 OBJECTS=$(CODE:.cpp=.o)
 LIB_OBJECTS=$(LIB_CODE:.cpp=.o)
 
-DEPENDS := $(patsubst %.cpp,%.d,$(CODE))
+DEPENDS := $(patsubst %.cpp,%.d,$(CODE)) main.d
 LIB_DEPENDS := $(patsubst %.cpp,%.d,$(LIB_CODE))
 
-EMCC_LIBS=\
+SDL2W_STAMP = $(SDL2W_DIR_NAME)/.source_ok
+SDL2W_LIB = lib/sdl2w/libsdl2w.a
+
+# Subset of Emscripten port flags: needed when compiling sdl2w to .o (static lib), not only at final link.
+EMCC_SDL_PORTS=\
 -s USE_SDL=2\
 -s USE_SDL_IMAGE=2\
 -s USE_SDL_MIXER=2\
 -s SDL2_IMAGE_FORMATS='["png"]'\
 -s USE_SDL_TTF=2\
--s USE_SDL_GFX=2\
+-s USE_SDL_GFX=2
+
+# Link-time (includes EMCC_SDL_PORTS).
+EMCC_LIBS=\
+$(EMCC_SDL_PORTS)\
 -s ALLOW_MEMORY_GROWTH=1\
 -s SAFE_HEAP=0\
 -s ASSERTIONS=1\
 -s INITIAL_MEMORY=326565888\
 -s ENVIRONMENT=web\
 -s DISABLE_EXCEPTION_CATCHING=0\
--lidbfs.js\
--Llib/sdl2w -lsdl2w
+-Llib/sdl2w -lsdl2w -lidbfs.js
 
 EMCC_EXPORTED=\
 -s EXPORTED_FUNCTIONS='[\
@@ -57,12 +62,10 @@ EMCC_EXPORTED=\
  "_setVolume",\
  "_setKeyDown",\
  "_setKeyUp",\
- "_setKeyStatus"\
+ "_setKeyStatus",\
+ "_sendEvent"\
 ]'\
 -s EXPORTED_RUNTIME_METHODS=['ccall']
-
-TARGET ?= native
-BASE_BUILD_DIR = build
 
 DEBUG=true
 LIBS=-Llib/sdl2w
@@ -70,10 +73,10 @@ INCLUDES= -I.
 ifeq ($(TARGET),wasm)
     FLAGS = -Wall -std=c++17 -Oz
     LIBS = $(EMCC_LIBS) $(EMCC_EXPORTED) --preload-file assets
-		EXE_SUFFIX=.js
+    EXE_SUFFIX=.js
     CXX = em++
 else
-    FLAGS = -O1 -Wall -std=c++17
+    FLAGS = -O0 -Wall -std=c++17 -fno-omit-frame-pointer
     CXX = g++
     ifeq ($(OS),Windows_NT)
         LIBS += -lsdl2w -mconsole -lmingw32 -lSDL2main -lSDL2 -lSDL2_image -lSDL2_ttf -lSDL2_mixer -lSDL2_gfx
@@ -89,70 +92,47 @@ else
     ifeq ($(DEBUG),true)
         FLAGS += -g
     endif
-    ifeq ($(TARGET),miyoo)
-        AS=arm-linux-gnueabihf-as
-        CC=arm-linux-gnueabihf-gcc
-        CXX=arm-linux-gnueabihf-g++
-        LD=arm-linux-gnueabihf-ld
-				INCLUDES += $$SDL_INCLUDE
-				LIBS += $$SDL_LIB_PATHS -lsdl2w -lSDL2main -lSDL2 -lSDL2_image -lSDL2_ttf -lSDL2_mixer -lSDL2_gfx
-    endif
 endif
 
-# This allows you to write "make testui <test regex>" and it will run tests
-# with that filter enabled
-ifeq (testui,$(firstword $(MAKECMDGOALS)))
-  ARGS := $(wordlist 2,$(words $(MAKECMDGOALS)),$(MAKECMDGOALS))
-	ifeq ($(ARGS),)
-		ARGS := *
-	else
-  	$(eval $(ARGS):;@:)
-	endif
-	TEST_UI_CPP_FILE := $(ARGS)
-endif
+.PHONY: sdl2w_wasm sdl2w-rebuild _copy_sdl2w_artifacts all
 
-# Updated .PHONY to include helper targets and remove the old $(SDL2W_BUILD_OUTPUT_DIR)
-.PHONY: $(EXE) all sdl2w sdl2w_wasm sdl2w_miyoo _ensure_sdl2w_source _copy_sdl2w_artifacts testui
+all: sdl2w $(EXE)
 
-all: sdl2w $(EXE) tests
-
-$(EXE): $(OBJECTS) $(LIB_OBJECTS) $(MAIN_ALL_OBJECT)
+$(EXE): $(OBJECTS) $(LIB_OBJECTS) $(MAIN_ALL_OBJECT) $(SDL2W_LIB)
 	$(CXX) $(FLAGS) $(INCLUDES) $(MAIN_ALL_OBJECT) $(OBJECTS) $(LIB_OBJECTS) -o $(EXE)$(EXE_SUFFIX) $(LIBS)
 
-tests:
-	make testsui TEST_UI_CPP_FILE=TestHeadCollisions
+# Convenience alias: builds $(SDL2W_LIB) only when needed (see rule below).
+sdl2w: $(SDL2W_LIB)
 
-sdl2w: _ensure_sdl2w_source
-	@echo "Building standard sdl2w library (running 'make all' in $(SDL2W_DIR_NAME)/src)...";
+# Force a full sdl2w rebuild + copy (use after upgrading sdl2w or changing its build).
+sdl2w_rebuild:
 	$(MAKE) -C "$(SDL2W_DIR_NAME)/src" -j8 all
-	$(MAKE) _copy_sdl2w_artifacts
+	@$(MAKE) _copy_sdl2w_artifacts
 
-sdl2w_wasm: _ensure_sdl2w_source
-	@echo "Building sdl2w library for WebAssembly (running 'make wasm' in $(SDL2W_DIR_NAME)/src)...";
-	$(MAKE) -C "$(SDL2W_DIR_NAME)/src" -j8 wasm "FLAGS=-Wall -std=c++17 -Oz"
-	$(MAKE) _copy_sdl2w_artifacts
-
-sdl2w_miyoo: _ensure_sdl2w_source
-	@echo "Building sdl2w library for miyooa30";
-	$(MAKE) -C "$(SDL2W_DIR_NAME)/src" -j8 miyoo
-	$(MAKE) _copy_sdl2w_artifacts
-
-# Common target to ensure sdl2w source code is present
-_ensure_sdl2w_source:
+$(SDL2W_STAMP):
 	@if [ ! -d $(SDL2W_DIR_NAME) ]; then \
 		echo "Directory $(SDL2W_DIR_NAME) not found. Cloning $(SDL2W_REPO_URL) into $(SDL2W_DIR_NAME)..."; \
 		git clone $(SDL2W_REPO_URL) $(SDL2W_DIR_NAME); \
 	else \
 		echo "Directory $(SDL2W_DIR_NAME) found. Assuming it is the sdl2w repository."; \
 	fi
+	@touch $@
 
-# Common target to copy built sdl2w artifacts
-# This assumes the sub-make (all or wasm) places artifacts correctly in $(SDL2W_BUILD_OUTPUT_DIR)
+$(SDL2W_LIB): $(SDL2W_STAMP)
+	@echo "Building standard sdl2w library (running 'make all' in $(SDL2W_DIR_NAME)/src)...";
+	$(MAKE) -C "$(SDL2W_DIR_NAME)/src" -j8 all
+	@$(MAKE) _copy_sdl2w_artifacts
+
+sdl2w_wasm: $(SDL2W_STAMP)
+	@echo "Building sdl2w library for WebAssembly (running 'make wasm' in $(SDL2W_DIR_NAME)/src)...";
+	$(MAKE) -C "$(SDL2W_DIR_NAME)/src" -j8 wasm "FLAGS=-Wall -std=c++17 -Oz $(EMCC_SDL_PORTS)"
+	@$(MAKE) _copy_sdl2w_artifacts
+
 _copy_sdl2w_artifacts:
 	@mkdir -p lib/sdl2w
 	@echo "Copying sdl2w artifacts from $(SDL2W_BUILD_OUTPUT_DIR) to lib/sdl2w..."
-	@cp -v $(SDL2W_BUILD_OUTPUT_DIR)/lib/libsdl2w.a lib/sdl2w
-	@cp -v $(SDL2W_BUILD_OUTPUT_DIR)/include/*.h lib/sdl2w
+	@cp -uv $(SDL2W_BUILD_OUTPUT_DIR)/lib/libsdl2w.a lib/sdl2w
+	@cp -uv $(SDL2W_BUILD_OUTPUT_DIR)/include/*.h lib/sdl2w
 
 -include $(DEPENDS)
 -include $(LIB_DEPENDS)
@@ -163,48 +143,22 @@ _copy_sdl2w_artifacts:
 run:
 	./$(EXE)
 
-testui: testsui
-	./TESTUI
-
-testsui: $(OBJECTS) $(LIB_OBJECTS)
-	$(CXX) $(FLAGS) $(INCLUDES) $(OBJECTS) $(LIB_OBJECTS) __tests__/ui/$(TEST_UI_CPP_FILE).cpp -o TESTUI $(LIBS)
-
 js: sdl2w_wasm
 	$(MAKE) TARGET=wasm -j8 $(EXE)
 	mv $(EXE).js ../web/
 	mv $(EXE).data ../web/
 	mv $(EXE).wasm ../web/
 
-# This is intended to be used from within the miyooa30-toolchain docker container
-miyooa30:
-	rm -rf dist
-	$(CXX) -DMIYOOA30 $(FLAGS) -Wno-psabi $$SDL_INCLUDE $$SDL_LIB_PATHS $(MAIN_ALL) $(CLIENT_CODE) $(SERVER_CODE) $(SHARED_CODE) -o $(EXE) $(LIBS)
-	mkdir -p dist/assets
-	cp -v $(EXE) dist
-	cp -r assets/*.png dist/assets
-	cp -r assets/*.ttf dist/assets
-	cp -r assets/*.wav dist/assets
-	cp -r assets/*.txt dist/assets
-
-# This is intended to be used from within the miyooamini-toolchain docker container
-miyoomini:
-	rm -rf dist
-	$(CXX) -DMIYOOMINI $(FLAGS) -Wno-psabi $$SDL_INCLUDE -o $(EXE) -Wl,-verbose $(MAIN_ALL) $(CLIENT_CODE) $(SERVER_CODE) $(SHARED_CODE) $(LIBS)
-	mkdir -p dist/assets
-	cp -v $(EXE) dist
-	cp -r assets/*.png dist/assets
-	cp -r assets/*.ttf dist/assets
-	cp -r assets/*.wav dist/assets
-	cp -r assets/*.txt dist/assets
+debug:
+	gdb $(EXE)
 
 clean:
 	rm -f $(OBJECTS) $(LIB_OBJECTS) $(MAIN_ALL_OBJECT)
 	rm -f $(DEPENDS) $(LIB_DEPENDS)
-	rm -f $(EXE) $(EXE).exe TESTUI TESTUI.exe
+	rm -f $(EXE) $(EXE).exe
 	rm -rf main.d
 	rm -rf .build
-	rm -rf dist
 	rm -rf lib/sdl2w
 	rm -rf $(SDL2W_BUILD_OUTPUT_DIR)
 	rm -rf $(SDL2W_DIR_NAME)/src/build/
-	rm -rf ../web/$(EXE).*
+	rm -rf ../dist/$(EXE).*
