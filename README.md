@@ -1,6 +1,6 @@
 # ZAG 2000
 
-The classic game of centipede with a locamotive skin.
+The classic game of centipede with a locamotive skin's worth of gameplay tweaks.
 
 The web version of this game is available here: https://benjamin-t-brown.github.io/zag2000/
 
