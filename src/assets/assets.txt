@@ -314,7 +314,6 @@ Pic,bomb,assets/img/bomb.png
 Sprites,bomb,1,8,8
 Anim,bomb_anim,loop
 bomb_0 100
-bomb_0_f 100
 EndAnim
 
 Pic,bomb_target,assets/img/bomb_target.png
